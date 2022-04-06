@@ -1,0 +1,2601 @@
+\documentclass{article}
+
+% Language setting
+% Replace `english' with e.g. `spanish' to change the document language
+%\usepackage[italian]{babel}
+\usepackage[utf8]{inputenc}
+
+% Set page size and margins
+% Replace `letterpaper' with `a4paper' for UK/EU standard size
+\usepackage[a4paper,top=2cm,bottom=2cm,left=3cm,right=3cm,marginparwidth=1.75cm]{geometry}
+
+% Useful packages
+\usepackage{amsmath}
+\usepackage{graphicx}
+\usepackage[colorlinks=true, allcolors=blue]{hyperref}
+\usepackage{longtable}
+
+
+%For C code
+\usepackage{xcolor}
+\usepackage{listings}
+
+\definecolor{mGreen}{rgb}{0,0.6,0}
+\definecolor{mGray}{rgb}{0.5,0.5,0.5}
+\definecolor{mPurple}{rgb}{0.58,0,0.82}
+\definecolor{backgroundColour}{rgb}{0.95,0.95,0.92}
+
+\lstdefinestyle{CStyle}{
+    backgroundcolor=\color{backgroundColour},   
+    commentstyle=\color{purple},
+    keywordstyle=\color{blue},
+    numberstyle=\color{black},
+    stringstyle=\color{red},
+    basicstyle=\footnotesize,
+    breakatwhitespace=false,         
+    breaklines=true,                 
+    captionpos=b,                    
+    keepspaces=true,                 
+    numbers=left,                    
+    numbersep=5pt,                  
+    showspaces=false,                
+    showstringspaces=false,
+    showtabs=false,                  
+    tabsize=2,
+    language=C
+}
+
+\title{Appunti di Sistemi Operativi T}
+\author{Edoardo Carra'}
+
+\begin{document}
+
+\maketitle
+
+\begin{figure}[h!]
+\centering
+\includegraphics[width=0.5\textwidth]{img/sis.png}   
+\end{figure}
+
+\begin{abstract}
+Appunti di Sistemi Operativi T, anno accademico 2021/22, corso tenuto dalla professoressa Anna Ciampolini.  Il link al corso di 
+\href{https://virtuale.unibo.it/course/view.php?id=25878}{virtuale} e alla stanza di \href{https://teams.microsoft.com/l/meetup-join/19%3ameeting_MDJjMWZjMWItMTgyOC00MDRmLTg1Y2EtYzRkNzRmMDE3YWNj%40thread.v2/0?context=%7b%22Tid%22%3a%22e99647dc-1b08-454a-bf8c-699181b389ab%22%2c%22Oid%22%3a%22764d790d-e373-4531-959c-9367a8dc2690%22%7d}{Teams}.
+\end{abstract}
+
+\noindent\section{Introduzione - Il sistema operativo}
+E' un programma, o meglio un insieme di programmi, che agisce da intermediario tra l'utente e l'hardware del PC:
+\begin{itemize}
+\item[$-$] Fornisce all'utente una visione astratta e semplificata dell'hardware.
+\item[$-$] Gestisce in modo efficace ed efficiente le risorse del sistema.
+\end{itemize}
+Il sistema operativo interfaccia programmi applicativi o di sistema con le risorse hardware 
+(CPU, memoria centrale, memoria secondaria, connessioni di rete). Inoltre, mappa le risorse hardware in risorse logiche, accessibili attraverso interfacce ben definite (processi, file system, memoria virtuale).
+Un sistema operativo deve avere le seguenti caratteristiche:
+\begin{itemize}
+\item[$-$]Scelta dell’architettura;
+\item[$-$]Capacità di condivisione;
+\item[$-$]Efficienza;
+\item[$-$]Estensibilità;
+\item[$-$]Protezione e sicurezza
+\item[$-$]Affidabilità/tolleranza ai guasti
+\item[$-$]Conformità agli standard
+\end{itemize}
+In particolare le ultime 4 sono tipiche di un sistema di grande dimensioni
+
+\medskip
+\noindent\fbox{%
+    \parbox{\textwidth}{%
+    \begin{center}
+        Il sistema operativo utilizza le API - application programming interface
+    \end{center}
+    }%
+}
+
+\subsection{L'evoluzione dei sistemi operativi}
+\begin{enumerate}
+    \item \textbf{Prima generazione}: controllo del sistema completamente manuale, 
+    linguaggio macchina. Non è presente alcun sistema operativo
+    \item \textbf{Seconda generazione}: sistemi batch semplici, linguaggio di alto livello, 
+    possibilità di effettuare operazioni di input mediante delle schede perforate. 
+    Aggregazioni di programmi in lotti (\textit{\underline{batch} = insieme di programmi(job) 
+    eseguiti in modo sequenziale}). In questo tipo di sistemi il compito unico del sistema operativo era quello di trasferire il controllo da un job, appena terminato, al prossimo da eseguire. Il sistema operativo risiede in memoria (monitor). I principali svantaggi sono: l'assenza di interazione con l'utente, inattività della CPU causata dalla sospensione di un job che attende un evento, sequenza.
+    \item \textbf{Multiprogrammazione:} per far fronte ai problemi sopra descritti, 
+    nascono i sistemi batch multiprogrammati:
+    viene precaricato sul disco un insieme di job (pool).Il sistema operativo ha il compito 
+    di caricare in memoria centrale un sottoinsieme dei job precaricati. Tra i job che il sistema 
+    operativo ha caricato in memoria centrale, ne viene selezionato uno a cui verrà assegnata
+    la CPU. Qualora il job corrente si pone in attesa di un evento,il sistema operativo assegna 
+    la CPU ad un altro job
+
+    \textit{La cpu non esegue sequenzialmente i job, ma attraverso dei cambi di contesto(context 
+    switch) interrompe e riprende l’esecuzione dei job senza mai portare la CPU in uno 
+    stato di wait (perché il job si aspetta una risorsa per esempio).
+    Esistono quindi due tipi di scheduling:
+    \begin{itemize}
+        \item[$-$]\underline{Scheduling dei job(Long-term scheduling):}
+        Quali job trasferire dalla memoria secondaria a quella principale.
+        \item[$-$]\underline{Scheduling della cpu(Short-term scheduling):}
+        Quali job assegnare alla CPU.
+    \end{itemize}
+    La filosofia di questi sistemi multiprogrammati è che se un job non può utilizzare La
+    CPU allora si esegue un altro job. Attenzione! Ogni volta che si esegue un 
+    context-switch ovviamente c'è un costo temporale che va pagato.
+    }
+
+    \item \textbf{Sistemi time-sharing:} Nascono della necessità di avere dei sistemi
+    che permettano maggiore \textit{interattivita'} con l'utente, e la possibilità di gestire 
+    più utenti che interagiscono contemporaneamente con il sistema operativo \textit{(multi-utenza)}.
+
+    \begin{itemize}
+        \item \underline{Multi-utenza:} il sistema presenta ad ogni utente una macchina virtuale completamente 
+        dedicata, in termini di: utilizzo della CPU e di utilizzo di altre risorse.
+        \item \underline{Interattivita':} per garantire un accettabile velocità di “reazione” alle richieste
+        dei singoli utenti, il sistema operativo interrompe l'esecuzione di un job dopo un 
+        intervallo di tempo prefissato (timeslice), assegnando la CPU ad un altro job.
+        
+    \end{itemize}
+
+    \textit{Nota bene: Se alzo il timeslice l’interattività diminuisce.}
+\end{enumerate}
+
+\subsection{Interruzioni}
+Le varie componenti hardware e software del sistema interagiscono con il sistema operativo 
+attraverso delle interruzioni asincrone (Interrupt).
+Per la precisione ogni interruzione è causata da un evento (richiesta di servizi al SO,
+completamento operazioni I/O, accesso non consentito alla memoria). Ad ogni interruzione è 
+associata una routine di servizio (handler) per la gestione dell'evento.
+
+\begin{itemize}
+    \item \underline{Interruzioni hardware:} i dispositivi inviano segnali alla CPU per notificare particolari 
+    eventi al sistema operativo.
+    \item \underline{Interruzioni software(trap)}: i programmi in esecuzione possono generare 
+    delle interruzioni: quando tentano l'esecuzione di operazioni non lecite oppure quando 
+    richiedono l'esecuzione di servizi al sistema operativo (\underline{System call}) 
+    tra quelle offerte dall’API del sistema
+\end{itemize}
+
+\noindent Non appena il sistema operativo riceve un’interruzione, interrompe l’esecuzione del processo 
+chiamante, salvando lo stato in memoria, attiva la routine di servizio (handler) 
+passando il controllo della CPU al sistema operativo, ed infine ripristina lo stato
+precedentemente salvato.
+\medskip
+
+\noindent\textit{NB: Per individuare le routine di servizio adeguata, si utilizza un vettore delle interruzioni.}
+
+\textbf{Missing drivers...}
+
+\subsection{Protezione}
+Nei sistemi che prevedono multiprogrammazione e multiutenza sono necessari alcuni meccanismi 
+di protezione. Nello specifico, le risorse allocate a programmi o utenti devono essere protette 
+nei confronti di accessi illeciti di altri programmi/utenti.
+
+\noindent Per prima cosa è necessario impedire al programma in esecuzione di accedere ad aree 
+di memoria esterne al proprio spazio che il sistema operativo gli ha riservato. 
+
+\noindent In generale il set di istruzioni del processore è solitamente diviso in due set: 
+privilegiate e non privilegiate. Solitamente le istruzioni del primo gruppo possono essere invocate
+ dal sistema operativo (per esempio le istruzioni di shutdown, disabilitare le interruzioni ecc...).
+Come facciamo a garantire l'esclusività del sistema operativo dell'esecuzione delle istruzioni 
+privilegiate? Lo facciamo a livello hardware. Si utilizzano in particolare dei ring di protezione,
+cioè dei bit di modo che settano il funzionamento della cpu(solitamente si trovano all'interno dei
+registri della CPU). Il  bit quindi può essere ZERO - \textbf{Kernel mode} oppure UNO - \textbf{User mode}. La CPU 
+quindi può eseguire istruzioni privilegiate solo in modalità kernel mode. Nel caso di accesso
+non permesso, il sistema risponde lanciando un'eccezione oppure provvedendo allo shutdown del 
+sistema.
+\medskip
+
+\noindent Un utente può eseguire operazioni in kernel mode attraverso il meccanismo delle 
+system call:
+
+\noindent il programma invia un interruzione software al sistema operativo che, dopo aver salvato il suo
+stato, cederà il controllo al sistema operativo. il sistema operativo eseguirà in kernel 
+mode l'operazione richiesta. Una volta terminata l'operazione, il controllo ritorna al
+programma chiamante (user mode).
+
+\noindent 2Inoltre ogni sistema suddivide la memoria in segmenti. Ogni segmento è associato a un livello 
+di privilegio. Per esempio l'area di memoria del sistema operativo è di livello zero.
+
+
+\subsection{La struttra del sistema operativo}
+\begin{itemize}
+    \item[$-$] \underline{Programma}: entità passiva, insieme di byte che deve essere eseguito
+    \item[$-$] \underline{Processo}: entità attiva, istanza del programma.  Entita' dinamica che cambia nel tempo.
+    \item[] 
+\end{itemize}
+
+\noindent Ogni processo è identificato dal programma e dal contesto di esecuzione(PC, registri ecc…).
+Le componenti principali di un sistema operativo(faremo riferimento ai SO multiprogrammati 
+time-sharing):
+
+\begin{itemize}
+    \item \textbf{Gestione dei processi}: \begin{enumerate}
+        \item Creazione/terminazione dei processi
+        \item Sospensione/ripristino dei processi
+        \item Sincronizzazione/comunicazione dei processi.
+        \item Gestione del blocco critico (deadlock) di processi
+        
+    \end{enumerate}
+    
+    \item \textbf{Gestione della memoria centrale CPU(nel nostro corso è unica nel sistema)}: \begin{enumerate}
+        \item Separare gli spazi di indirizzi associati ai processi
+        \item Allocare/deallocare memoria dei processi.
+        \item Memoria virtuale: gestire spazi logici di indirizzi di dimensioni complessivamente superiori allo spazio fisco
+        \item Realizzazione di collegamenti tra memoria logica e memoria fisica.(binding)
+    \end{enumerate}
+    
+    \item \textbf{Gestione della memoria secondaria e del file system}: \begin{enumerate}
+        \item Allocazione/deallocazione di spazio
+        \item Gestione dello spazio libero
+        \item Scheduling delle operazioni su disco
+        \item Fornire una visione logica uniforme della memoria secondaria: \begin{itemize}
+            \item Realizzare il concetto astratto di file, come unità di memorizzazione logica
+            \item Fornire una struttura astratta per l'organizzazione dei file (directory)
+        \end{itemize}
+
+        \item Creazione/cancellazione file
+        \item Manipolazione dei file
+        \item Associazione tra file e dispositivi di memorizzazione secondaria
+    \end{enumerate}
+    In generale file e directory vengono trattati in modo omogeneo alle periferiche di input output
+        
+
+    \item \textbf{Protezione e sicurezza}: \begin{enumerate}
+        \item Controllo dell'accesso alle risorse da parte dei processi mediante: 
+        autorizzazioni e modalità di accesso.
+    \end{enumerate}
+
+    \item \textbf{Interfaccia utente}: \begin{enumerate}
+        \item Interprete dei comandi shell linea di comando.
+        \item Interfaccia grafica (GUI) = interazione mouse - elementi grafici. 
+        Di solito è organizzata a finestre.
+    \end{enumerate}
+\end{itemize}
+
+\medskip
+\noindent\fbox{%
+    \parbox{\textwidth}{%
+    \begin{center}
+        L’interfaccia del SO verso i processi e' rappresentato dalle system call.
+        In generale definiamo un \textbf{programma di sistema} un programma che 
+        utilizza delle system call.\end{center}
+    }%
+}
+\medskip
+
+Le componenti sopra elencate possono essere organizzate in modi differenti 
+all'interno del sistema operativo:
+
+\begin{enumerate}
+    \item \textbf{Struttura monolitica}: il sistema operativo è costituito da un unico modulo 
+    contenente un insieme di procedure, che realizzano le varie componenti.
+    Il principale vantaggio di un sistema monolitico è il basso costo di interazione tra le
+    varie componenti, ma il SO è un sistema complesso e presenta gli stessi requisiti delle 
+    applicazioni in the large che non sono soddisfatte dalla struttura monolitica.  
+    Per aggiungere e modificare qualcosa bisogna ricompilare tutto. Programmi di questa 
+    dimensione portano con sé inoltre molti bug, quindi non si rispetterebbe l'affidabilità
+    del sistema. L'interazione tra le diverse componenti avviene mediante il meccanismo di 
+    chiamata a procedura. Quello che il progettista cerca di raggiungere è di raggruppare i
+    moduli che interagiscono di più tra loro.
+    
+    \item \textbf{Struttura modulare}: le varie componenti del sistema operativo vengono 
+    organizzate in moduli caratterizzati da interfacce ben definite. Ogni strato ha un
+     insieme di funzionalità che vengono offerte allo strato superiore mediante interfacce (system call).
+    Ogni modulo è indipendente dagli altri. Se ne modifico uno, posso permettermi di 
+    ricompilare solo quello a patto di non modificare l'interfaccia.
+    \begin{itemize}
+        \item \underline{Vantaggi}:\begin{itemize}
+            \item \textit{Astrazione}: ogni livello è un oggetto astratto, che fornisce ai
+             livelli superiori una visione astratta del sistema.
+            \item \textit{Modularita'}: possibilità di sviluppo, verifica,
+            modifica in modo indipendente dagli altri livelli.
+        \end{itemize}
+        \item \underline{Svantaggi}:\begin{itemize}
+            \item \textit{Organizzazione gerarchica tra le componenti}, non sempre è possibile,
+            difficoltà di realizzazione.
+            \item \textit{Scarsa efficienza}: costo di attraversamento dei livelli.
+        \end{itemize}
+    \end{itemize}
+    
+    \item \textbf{Microkernel}:Il sistema operativo è composto da una parte che esegue in modo kernel. 
+    Nei sistemi a microkernel la struttura del nucleo (kernel) è ridotta a poche funzionalità di base
+    mentre il resto del sistema operativo è rappresentato da processi utente.
+    Solitamente anche il sistema operativo è diviso in moduli. Non tutti i moduli devono 
+    eseguire in modalità Kernel. Diversa la situazione per i sistemi monolitici. Lì tutto il
+    SO lavora in modalità kernel.
+    E' un sistema affidabile(sono famosi per la loro sicurezza) e personalizzabile ma non
+    molto efficiente a causa delle molte chiamate a system call.
+    Il kernel è composto: \begin{itemize}
+        \item Creazione/terminazione dei processi   
+        \item Scheduling della CPU
+        \item Gestire il cambio di contesti
+        \item Sincronizzazione/comunicazione tra processi
+        \item Gestione della memoria
+        \item Gestione dell'I/O
+        \item Gestione delle interruzioni
+        \item Implementazione system call.
+    \end{itemize}
+
+    \item \textbf{Kernel ibridi}: una via di mezzo tra i kernel monolitici e quelli a 
+    microkernel (XNU- X is not UNIX Mac OS X,  Microsoft Windows)
+
+\end{enumerate}
+
+\subsection{Macchine virtuali}
+
+Dato un sistema caratterizzato da un insieme di risorse 
+(hardware e software), virtualizzare il sistema significa 
+presentare all'utilizzatore una visione delle risorse del 
+sistema diversa da quella reale.
+Ciò si ottiene introducendo un livello di indirezione tra
+ la vista logica e quella fisica delle risorse.
+
+\pagebreak
+\section{Processi}
+Un processo è definito come l'istanza di un programma. Allo stesso programma 
+possono quindi essere associati più processi. 
+Uno degli obiettivi principali del sistema operativo e' organizzare e memorizzare
+gli attributi dei processi.
+
+Quali sono gli attributi di un processo? \begin{itemize}
+    \item[$-$] Codice;
+    \item[$-$] Dati: variabili globali;
+    \item[$-$] Program counter;
+    \item[$-$] Altri registri;
+    \item[$-$] Stack: parametri, variabili locali e 
+    funzioni/procedure;
+    \item[$-$] Inoltre a un processo possono essere associate
+     delle risorse (che nei SO UNIX-like sono rappresentati attraverso l'astrazione
+     del file).
+\end{itemize}
+
+\subsection{Stato di un processo}
+Un processo, durante il suo ciclo di vita, si può trovare
+in vari stati:\begin{enumerate}
+    \item \textit{init}: stato transitorio. Il processo viene
+    caricato in memoria e il SO inizializza tutti i dati necessari.
+    Un processo viene portato nella fase di init dallo scheduler dei processi.
+    \item \textit{ready}: il processo pronto per acquisire la CPU.
+    \item \textit{running}: il processo sta utilizzando la CPU
+    \item \textit{waiting}: il processo è sospeso in attesa di un evento o di
+    una risorsa.
+    \item \textit{Terminated}: stato transitorio. È un tempo dovuto alla 
+    deallocazione del processo dalla memoria.
+\end{enumerate}
+\begin{figure}[h!]
+    \begin{center}
+        \includegraphics[width=0.6\linewidth]{img/process.png}
+    \end{center}
+\end{figure}
+
+\begin{itemize}
+    \item[$-$] Un processo che si trova nello stato running o 
+    stato ready è chiamato \underline{processo attivo}.
+    \item[$-$]  Un processo che si trova nello
+    stato di waiting è chiamato \underline{processo sospeso}.
+\end{itemize}
+
+\noindent La revoca (la quale non si verifica obbligatoriamente) e
+l'assegnazione della CPU è sempre effettuata dallo scheduler.
+Questa operazione di revoca si chiama \underline{preemption}.
+Durante questo passaggio da ready a running 
+(oppure waiting-ready-running), deve essere memorizzato il
+\underline{contesto di esecuzione}. La struttura dati che che contiene
+le informazioni necessarie si chiama
+\underline{descrittore di processo}
+ (PCB - process control block).
+
+
+\subsubsection{PCB}
+\medskip
+\noindent\fbox{%
+    \parbox{\textwidth}{%
+    \begin{center}
+        Il \textbf{PCB} è una struttura dati che descrive (descrittore)
+        un processo in qualunque suo stato. Ad ogni processo è
+        associato solamente un descrittore, che lo rappresenta 
+        sia staticamente che dinamicamente.
+        Il PCB è una struttura dati che a sua volta è inserito
+        in strutture dati più ampie come code per l'accesso a una risorsa.
+        Per lo stato di ready e waiting sono organizzate delle code in cui 
+        vengono inseriti i descrittori dei processi. 
+    \end{center}
+    }%
+}
+\medskip
+
+\noindent Cosa contiene il descrittore di un processo:
+\begin{enumerate}
+    \item Stato del processo
+    \item Registri di CPU (IR, PC ecc..)
+    \item Informazioni di Scheduling (priorità, puntatori alle code, ecc.. questo varia da SO a SO ovviamente. Non tutti applicano le stesse politiche di scheduling)
+    \item Informazioni che servono al gestore della memoria (registri base, limite, ...)
+    \item informazioni relative all'I/O (risorse allocate, file aperti, …)
+    \item Informazioni di accounting (tempo di CPU utilizzato, …)
+\end{enumerate}
+
+\subsubsection{Scheduling}
+\noindent In generale, il sistema operativo compie tre diverse attività 
+di scheduling:
+\begin{itemize}
+    \item \textit{Scheduling a lungo termine}: componente
+    del sistema operativo che si occupa di selezionare i programmi 
+    presenti nella memoria secondaria da caricare nella memoria centrale
+    (creando i corrispondenti processi)
+    
+    \textit{NB: Nei sistemi moderni general-purpose è praticamente assente e 
+    molto spesso è l'utente che stabilisce il grado di multiprogrammazione.}
+
+    \item \textit{Scheduling a medio termine (Swapping)}:
+    Si occupa di trasferire in memoria secondaria, temporaneamente,
+    dei processi, o parti di essi, in modo da consentire il caricamento di
+    altri processi. Essendo il grado di multiprogrammazione un numero finito,
+    non sempre riusciamo a gestire tutti i processi (\textbf{il grado di multiprogrammazione}
+    è il massimo numero di processi che un sistema operativo è in grado di 
+    gestire). Solitamente i processi target dello swap sono i processi in stato di waiting.
+        
+    \item \textit{Scheduling a breve termine (CPU)}:E' quella parte del sistema operativo
+    che si occupa della selezione dei processi a cui assegnare la CPU. 
+    Una volta selezionato il processo(che va quindi deciso), 
+    una parte del sistema operativo (\textit{Dispatcher}) effettuerà un cambio di 
+    contesto (context switch).
+    Deve essere molto efficiente, gira centinaia di volte in un secondo.
+    Quando si verifica questo cambio di contesto, il sistema operativo deve
+    salvare lo stato del processo uscente, aggiornando il suo PCB(i registri, risorse ecc...)
+    e trasferire i dati dal PCB del processo entrante alla CPU.
+    Di fatto lo scheduler ha due compiti: il primo è quello decisionale e 
+    l'altro operativo, cioè attuare il cambio di contesto. 
+    
+    Il processo a cui viene tolta la cpu è detto deschedulato.
+
+    Lo scheduling a breve termine gestisce due code: \begin{itemize}
+        \item La coda dei processi pronti
+        \item La coda dei processi in stato di waiting 
+    \end{itemize}
+
+\end{itemize}
+
+Scelte ottimali di scheduling dipendono dalle caratteristiche dei processi. 
+Ad es.:\begin{itemize}
+    \item processi I/O-bound: maggior parte del tempo in operazioni I/O
+    \item processi CPU-bound: maggior parte del tempo in uso CPU
+\end{itemize}
+\medskip
+
+\noindent\fbox{%
+\parbox{\textwidth}{%
+    \begin{center}
+        \textbf{Overhead}: Il passaggio da un processo al successivo può 
+        richiedere onerosi trasferimenti da/verso la memoria secondaria,
+            per allocare/deallocare gli spazi di indirizzi dei processi. 
+            Troppi cambi di contesto aumentano l'overhead della CPU.
+    \end{center}
+    }%
+}
+\medskip
+
+\noindent L'overhead dipende da una serie di parametri:\begin{itemize}
+    \item[$-$] La dimensione del PCB;
+    \item[$-$] La frequenza di cambio di contesto;
+    \item[$-$] Costo trasferimento da/verso la memoria;
+\end{itemize}
+    
+\noindent Nel progetto dello scheduler, è fondamentale valutare questo genere di 
+parametri. Questo ci porta all'utilizzo di processi leggeri, i THREAD,
+che hanno la proprietà di condividere codice e dati con altri processi.
+L'effetto è una diminuzione del PCB e una conseguente diminuzione 
+dell'overhead.
+
+\subsection{Operazione sui processi}
+Ogni sistema operativo multiprogrammato prevede dei meccanismi per 
+la gestione dei processi:
+\begin{enumerate}
+    \item Creazione
+    \item Interazione tra processi
+    \item Terminazione
+\end{enumerate}
+\noindent Queste sono delle operazioni privilegiate 
+(esecuzione in modo kernel). Il programmatore può quindi operare sui
+processi soltanto attraverso delle opportune system call.
+
+\subsubsection{Creazione}
+Come si crea un processo? In generale esiste un processo padre che crea un
+processo figlio(fork). Si genera quindi una gerarchia di processi 
+rappresentabile con una struttura ad albero, la radice è un processo creato 
+dal bootloader chiamato “init”(per esempio in GNU/LINUX si chiama "systemd" con PID 1).  UNIX e Windows usa questo tipo di struttura.
+Esempio: init - shell - nautilus - gedit - ecc…
+
+\noindent Il sistema operativo tiene traccia delle relazioni tra i processi. Questo 
+perché al padre potrebbe servire il risultato/i dell'esecuzione del proprio 
+figlio. 
+Quali sono gli aspetti caratteristici di una relazione padre-figlio:
+\begin{enumerate}
+    \item \textit{Concorrenza}:
+        \begin{enumerate}
+            \item Padre e figlio procedono in parallelo (es.UNIX).
+            \item Il padre attende la terminazione dei figli.
+        \end{enumerate}
+    \item \textit{Condivisione di risorse}:
+        \begin{enumerate}
+            \item Le risorse del padre sono condivise con i figli (es.UNIX). 
+            \item Il figlio utilizza risorse solamente se le richiede esplicitamente.
+        \end{enumerate}
+    \item \textit{Spazio degli indirizzi}:
+        \begin{enumerate}
+            \item \textbf{Duplicato}:lo spazio degli indirizzi del figlio è 
+            una copia di quello del padre. Stesso codice, copia degli stessi dati
+            ecc..(UNIX-like system seguono gli standard Posix)
+            \item \textbf{Differenziato}: spazio degli indirizzi di padre 
+            e figlio con codice e dati diversi
+        \end{enumerate}
+\end{enumerate}
+
+\subsubsection{Terminazione}
+Come si comportano i figli di un padre che termina? E il padre di un figlio 
+che termina?
+Nel primo caso esistono due possibilità: o tutti i figli terminano, oppure
+i figli continuano l'esecuzione ma devono cercarsi un nuovo processo padre.
+Nel secondo caso il padre può rilevare il suo stato di terminazione.
+
+\subsection{Thread}
+Un thread è un unità di esecuzione che può condividere codice e dati con altri
+thread associati al medesimo task.
+\medskip
+
+\noindent\fbox{%
+\parbox{\textwidth}{%
+    \begin{center}
+        \textbf{Task}: insieme di thread che riferiscono
+        lo stesso codice, gli stessi dati e le stesse risorse 
+        (il codice e i dati non sono caratteristiche del singolo thread, 
+        ma del task al quale appartengono).
+        Thread dello stesso task modificano gli stessi dati!
+    \end{center}
+    }%
+}
+\medskip
+
+\noindent A differenza dei processi pesanti, un thread può condividere 
+variabili con altri thread aumentando il supporto alla comunicazione tra
+flussi di esecuzione. Questo porta ad una riduzione del costo del context 
+switch, poiché i PCB dei thread non contengono alcuna informazione relativa
+al codice e dati. Questo perché risorse, codice e dati sono caratteristiche 
+del task, non del thread!. Ci sarà quindi un PCB per ogni task,
+a cui aggiungo i PCB, più piccoli, dei thread che fanno riferimento a quel task.
+Il PCB del thread diventa quindi molto leggero: contiene solo i registri e le
+informazioni che sono necessarie per l'esecuzione!
+Un processo single-thread è chiamato anche processo pesante.
+
+\noindent I thread condividono il codice e possono condividere
+dati e risorse(files).
+
+\begin{figure}[h!]
+    \begin{center}
+        \includegraphics[width=0.7\linewidth]{img/thread.png}
+        \caption{Da questa immagine si puo' notare
+        la diminuzione del PCB per i sistemi multithread.}
+    \end{center}
+\end{figure}
+
+\begin{figure}[h!]
+    \begin{center}
+        \includegraphics[width=0.6\linewidth]{img/multithreading.png}
+        \caption{Thread e SO.}
+    \end{center}
+\end{figure}
+
+\noindent Lo svantaggio dell'utilizzo dei thread 
+è la sicurezza e la coerenza dei dati, in quanto un thread ha accesso ai
+dati di un altro thread.
+
+\subsection{Processi indipendenti e interagenti}
+
+\begin{itemize}
+    \item \underline{Processi interagenti}: due processi 
+    sono interagenti se l'esecuzione di uno è influenzata
+    dall'esecuzione di un altro e/o viceversa. Esistono diversi
+    tipi di interazione: \begin{enumerate}
+        \item \textbf{cooperazione}:Interazione prevedibile e
+        desiderata, i processi collaborano per il 
+        raggiungimento di un fine comune.
+        \item \textbf{Competizione}: Interazione prevedibile
+        ma “non desiderata”.
+        \item \textbf{Interferenza}:Interazione non prevista
+         e non desiderata. 
+    \end{enumerate}
+    L'interazione può avvenire mediante:
+    \begin{enumerate}
+        \item \textbf{Memoria condivisa}(Ambiente globale):
+        Il sistema operativo consente ai processi di condividere variabili: 
+        l'interazione avviene tramite l'accesso a variabili
+        condivise.
+        \item \textbf{Scambio di messaggi}(Ambiente locale): 
+        I processi non condividono variabili e interagiscono mediante
+        trasmissione/ricezione di messaggi.
+    \end{enumerate}
+    Il vantaggio principale di utilizzare processi che possono
+    interagire fra di loro (\textit{condivisione di informazioni})
+    è la velocità di esecuzione, in quanto vi è una
+    suddivisione dei compiti tra i vari processi (\textit{Modularità}).
+    
+    \item \underline{Processi indipendenti}: due processi si dicono 
+    indipendenti se l'esecuzione di uno non è influenzata dall'altro e viceversa.
+\end{itemize}
+
+\subsection{Implementazione dei thread}
+La creazione de thread può essere realizzata nei seguenti modi:
+\begin{itemize}
+    \item [$-$] \textbf{Livello kernel}: Il SO 
+    gestisce direttamente i cambi di contesto e SO fornisce
+    strumenti per la sincronizzazione per l'accesso di thread a 
+    variabili comuni.
+    \item[$-$] \textbf{A livello utente}: es(POSIX, Java thread)
+    Viene creata un'astrazione tra i thread e il kernel.
+    Questo \textit{gestore di thread} si interpone tra l'utente 
+    e il kernel così da effettuare il passaggio da un thread
+    al successivo (nello stesso task) senza la necessità di utilizzare system call.   
+    Però, nel fare questo, il SO vede solo processi pesanti: la sospensione
+    di un thread causa la sospensione di tutti i thread del task.
+\end{itemize}  
+
+\pagebreak
+\section{UNIX}
+\subsection{Caratteristiche di un processo UNIX}
+
+\noindent Ogni processo ha un proprio spazio di indirizzamento
+completamente locale e non condiviso. Questo modello è detto 
+\textbf{modello ad ambiente locale} (o a \textbf{scambio di messaggi}).
+I processi UNIX NON condividono dati.
+Il codice però è condiviso. Se ci sono più processi che eseguono lo stesso 
+programma, allora alloco il codice in memoria solo una volta(\textbf{codice rientrante})
+
+
+
+\subsubsection{Stati di un processo UNIX}
+Oltre agli stati generali (init, ready, running, sleeping, terminated)
+si hanno in aggiunta due nuovi:
+\begin{itemize}
+    \item \textbf{Zombie}: il processo è terminato, ma è in attesa che il padre
+     analizzi lo stato di terminazione.
+    \item \textbf{Swapped}: l processo (o parte di esso) è temporaneamente
+    trasferito in memoria secondaria dallo scheduler a medio termine che
+    effettua uno \textit{swap-out} (si applica preferibilmente ai processi
+    più grandi o a quelli in stato di wait). Lo si fa nel caso in cui la memoria
+    primaria è piena, per questo motivo nei sistemi moderni non interviene praticamente mai. 
+    Lo \textit{swap-in} privilegerà i processi più corti invece. 
+    
+\end{itemize}
+
+\begin{figure}[h!]
+    \begin{center}
+        \includegraphics[width=0.5\linewidth]{img/unix_process.png}
+    \end{center}
+\end{figure}
+
+\subsubsection{Rappresentazione processi UNIX}
+Il codice dei processi è rientrante, quindi più processi possono condividere
+lo stesso codice. Per permettere questo il codice ed i dati devono
+essere separati (\textbf{modello a codice puro}). Il sistema operativo gestisce
+una struttura dati globale in cui sono contenuti i puntatori ai codici utilizzati,
+eventualmente condivisi, dai processi. 
+
+\noindent La struttura che contiene i puntatori ai codici dei programmi viene chiamata: \textbf{text table}.
+L'elemento della text table si chiama \textbf{text structure} (una text structure 
+per ogni codice attualmente in uso) e contiene: un puntatore al codice 
+ed il numero dei processi che lo condividono: un semplice contatore, utile 
+per capire se è possibile eliminare la text structure nel caso vada a zero.
+
+\begin{longtable}[c]{| c | c |}
+   
+    \hline
+    \multicolumn{2}{| c |}{\textbf{Text Table}}\\
+    \hline
+    Code Pointer & Process Counter\\
+    \endfirsthead
+    \hline
+        0020 0000h & 3\\
+        00A0 4000h & 1\\
+        00C0 FFFFh & 2\\
+        02C0 FFC0h & 3\\
+        ... & ...\\
+        0020 0000h & 1\\
+        00A0 4000h & 1\\
+        20C3 FFEFh & 3\\
+        E2C0 11C1h & 1\\
+    \hline
+\end{longtable}
+
+\noindent A differenza di quanto abbiamo visto prima, il PCB è rappresentato da due
+strutture dati (invece di una):
+\begin{enumerate}
+    \item \textbf{Process structure}: contiene le informazioni 
+    necessarie al sistema per la gestione del processo (PID,
+    stato, puntatori alle aree dati e stack del processo, \textit{riferimento 
+    all'elemento della text table associato al codice del processo}, informazioni
+    di scheduling, riferimento al PID padre, gestione dei segnali, 
+    puntatore al processo successivo nella coda dei processi in cui si trova,
+    \textit{puntatore alla user structure}). Le process structure sono organizzate
+    in un vettore: \textbf{process table} (1 elemento per ogni processo).
+   
+    \begin{longtable}[c]{| c | c | c | c | c | c | c |}
+   
+        \hline
+        \multicolumn{7}{| c |}{\textbf{Process Table}}\\
+        \hline
+        PID & Stato & Text table & Scheduling & PID padre
+         & ... & User structure \\
+        \endfirsthead
+        \hline
+            1020 & waiting & 2034 & 4 & 1 & .. & 1234 \\
+            1 & waiting & 2034 & 4 & 1 & .. & 2345 \\
+            2323 & zombie & 2034 & 3 & 1020 & .. & 2342 \\
+            1450 & swapped & 2034 & 2 & 1 & .. & 0234 \\
+            ... & ... & ... & ... & ... & ... & ... \\
+            0100 & running & 2034 & 4 & 1 & .. & 2134 \\
+        \hline
+    \end{longtable}
+
+
+    \item \textbf{User structure}: informazioni necessarie solo se il processo 
+    è residente in memoria centrale (inutile se è stata swappata) (registri CPU,
+    informazioni sulle risorse allocate (cioè file aperti), informazioni sulla
+    gestione dei segnali, ambiente del processo(directory corrente, utente,
+    gruppo, argc/argv, path)...).
+
+\end{enumerate}
+
+\subsubsection{Immagine di un processo}
+
+\noindent \textbf{Immagine di un processo}: E' l'insieme di aree di memoria e
+strutture dati, associate al processo. \textit{ATTENZIONE}: non tutta 
+l'immagine è accessibile in modo user.
+
+\begin{figure}[h!]
+    \begin{center}
+        \includegraphics[width=0.8\linewidth]{img/immagine_processo.png}  
+    \end{center}
+\end{figure}
+
+\noindent L'immagine riassume le parti che possono essere accedute in modalità 
+kernel o user, e quelle che possono essere swappate e quelle che non lo possono
+essere. 
+N.B. Lo stack del kernel è un'area di memoria utilizzata per il passaggio dei 
+parametri tramite system call.
+
+\noindent Ogni processo può essere soggetto a swapping:
+ma non tutta l'immagine di un processo può essere trasferita in memoria: 
+\textit{una parte swappable ed una parte residente non swappable.}
+
+\pagebreak
+\section{System Call}
+\subsection{Fork()}
+
+\noindent\fbox{%
+\parbox{\textwidth}{%
+    \begin{center}
+        \textbf{int fork(void);}
+    \end{center}
+    }%
+}
+\medskip
+
+\noindent Questa funzione consente a un processo di generare un processo figlio.
+Padre e figlio condividono lo stesso codice (per la rientranza del codice),
+quindi eseguono lo stesso programma. Il figlio eredita una copia di \textit{tutti}
+i dati del padre (tranne la process structure ovviamente).
+
+La funzione non richiede parametri e restituisce un intero che dipende dal processo:
+\begin{itemize}
+    \item[$-$] 0 per il processo figlio creato.
+    \item[$-$] maggiore di 0, indicante il PID del figlio, per il processo padre.
+    \item[$-$] minore di 0 se la creazione non è andata a buon fine.
+\end{itemize}
+
+\noindent L'utilizzo della fork() comporta l'allocazione di una nuova process 
+structure associata al processo figlio e l'allocazione di
+una nuova user structure nella quale viene copiata la user structure del padre.
+Infine dovrà essere incrementato il contatore della text structure corrispondente.
+Dopo aver utilizzato la fork:\begin{itemize}
+    \item[$-$] Padre e figlio procedono in parallelo(concorrenza).
+    \item[$-$] Lo spazio degli indirizzi è duplicato.
+     Ogni variabile del figlio è inizializzata con il valore assegnatole dal padre
+     prima della fork()
+    \item[$-$] Se la user structure è duplicata, le risorse allocate al
+    padre sono condivise con i figli, le informazioni per la gestione dei
+    segnali sono le stesse e infine il figlio nasce con lo stesso PC del padre.
+\end{itemize}
+
+esempio di fork:
+\begin{lstlisting}[style=CStyle]
+    #include <stdio.h>
+    if(fork()==0){
+        //codice figlio
+    }else{
+        //codice padre che continua la sua esecuzione concorrente
+    }
+
+\end{lstlisting}
+
+\subsection{Exit()}
+
+\noindent\fbox{%
+\parbox{\textwidth}{%
+    \begin{center}
+        \textbf{void exit(int status);}
+    \end{center}
+    }%
+}
+\medskip
+
+\noindent Esistono due tipi di terminazione: volontaria e involontaria. 
+\begin{itemize}
+    \item[$-$] \textit{Volontaria}: o tramite exit() o per esecuzione dell'ultima 
+    istruzione. 
+    \item[$-$] \textit{Involontaria}:azioni illegali, interruzione mediante
+    segnale. Nel caso di terminazione involontaria si salva l'immagine del
+    processo nel “core” per analizzare a posteriori le cause dell'interruzione.
+    
+\end{itemize}
+\noindent La funzione prevede un parametro status mediante il quale il processo
+che termina può comunicare al padre informazioni sul suo stato di terminazione.
+L'utilizzo della exit() comporta la chiusura dei file aperti non condivisi e 
+la terminazione del processo:
+\begin{itemize}
+    \item[$-$] Se il processo che termina ha figli in esecuzione, 
+    il processo init "adotterà" tutti i figli ancora in esecuzione.
+    Nella process structure dei figli, il riferimento al padre deve essere 
+    modificato con il valore 1.
+    \item[$-$] Se il processo termina prima che il padre ne riveli lo stato
+    di terminazione con la system call wait(), il processo passa nello stato
+    zombie. Non è detto che il padre ne verifichi lo stato, nel caso questo 
+    termini i figli in stato zombie termineranno con lui.
+\end{itemize}
+
+\textbf{N.B.} Quando termina un processo adottato dal processo init, init 
+rileva automaticamente il suo stato di terminazione. Perciò i processi figli di
+init non permangono nello stato di zombie.
+
+\subsection{Wait()}
+
+\noindent\fbox{%
+\parbox{\textwidth}{%
+    \begin{center}
+        \textbf{int wait(int* status);}
+    \end{center}
+    }%
+}
+\medskip
+
+\noindent Questa funzione prevede un parametro “status” che rappresenta 
+l'indirizzo della variabile in cui viene memorizzato lo stato di terminazione 
+del figlio. Quindi la wait serve al padre per verificare il risultato di un 
+processo in stato zombie.
+
+Il risultato prodotto dalla wait() è il PID del processo terminato oppure 
+un codice di errore (minore 0).
+La logica è la seguente:
+\begin{enumerate}
+    \item Se tutti i figli non sono ancora terminati,
+    il processo si sospende (stato sleepy) in attesa della terminazione 
+    del primo di esso. Si dice in questo caso che la wait si dice sospensiva.
+    \item Se esiste almeno un figlio in stato zombie, la wait() restituisce 
+    immediatamente il suo stato di terminazione.
+    \item Se non esiste neanche un figlio (la wait() non è \textit{sospensiva})
+    ritorna un codice di errore.
+\end{enumerate}
+
+\noindent In caso di terminazione di un figlio, la variabile status raccoglie lo 
+stato di terminazione. Si distinguono due casi:
+\begin{enumerate}
+    \item Byte meno significativo di status è zero: si parla di terminazione volontaria
+    {primi 8 bit codice di stato e ultimi 8 bit pari a zero}. 
+    \item In caso contrario il byte meno significativo descrive il segnale
+    che ha terminato il figlio (terminazione involontaria) 
+    {primi 8 bit codice di stato saranno inutili e ultimi 8 bit 
+    indicano il segnale che ha terminato il figlio}.
+\end{enumerate}
+
+\noindent Esempio di wait, N.B. lo standard POSIX.1 prevede delle macro definite
+nell'header file <sys/wait.h> per l'analisi dello
+stato di terminazione:
+
+\begin{lstlisting}[style=CStyle]
+#include <sys/wait.h>
+int main(){
+    int pid, status;
+    pid=fork();
+    if (pid==0){
+        printf("sono il figlio\n");
+        exit(0);
+    }
+    else { 
+        pid=wait(&status);
+        if (WIFEXITED(status))
+            printf("Terminazione volontaria di %d con
+                stato %d\n", pid, WEXITSTATUS(status));
+        else if (WIFSIGNALED(status))
+            printf("terminazione involontaria per segnale
+                %d\n", WTERMSIG(status)); 
+    }
+}
+\end{lstlisting}
+
+\noindent Lo standard POSIX.1 prevede delle macro definite nel 
+file <sys/wait.h>: \begin{itemize}
+    \item \textbf{WIFEXITED(status)}: restituisce vero se il 
+     processo figlio è terminato volontariamente. In questo
+     caso la macro \textbf{WEXITSTATUS(status)} restituisce 
+     lo stato di terminazione
+    \item \textbf{WIFSIGNALED(status)}: restituisce vero se il processo
+    figlio è terminato involontariamente. In questo caso la
+    macro \textbf{WTERMSIG(status)} restituisce il numero del
+    segnale che ha causato la terminazione
+    \end{itemize}
+
+
+\subsection{Exec()}
+
+\noindent\fbox{%
+\parbox{\textwidth}{%
+    \begin{center}
+        \textbf{execl(), execle(), execlp, execv(), execve(), execvp()}
+    \end{center}
+    }%
+}
+\medskip
+
+\noindent Questa system call permette di differenziare il 
+codice di due processi. In altre parole, vengono sostituiti
+il codice e gli argomenti di invocazione (es argc e argv)
+del processo chiamante, con il codice e gli argomenti di un 
+programma specificato come parametro della funzione.
+Restituisce un intero solamente se si è verificato un errore.
+
+N.B. \underline{Non genera nuovi processi, non confondere fork ed exec.}
+
+
+L'utilizzo di questa funzione comporta il cambiamento dei 
+seguenti attributi:
+\begin{enumerate}
+    \item Codice, dati globali, stack e heap.
+    \item riferimento alla text table
+    \item Mantiene la stessa process structure e stack del kernel.
+    Per esempio gli eventuali file aperti, rimangono aperti!! 
+    Invece nella user structure non cambia nulla che non si
+    riferisca al codice ( quindi cambia il PC ecc).
+    \item l'environment cambia solamente se eseguita execle o exexve.
+\end{enumerate}
+
+\begin{figure}[h!]
+    \begin{center}
+        \includegraphics[width=0.8\linewidth]{img/execl.png}
+    \end{center}
+\end{figure}
+
+\noindent Le variabili di exec, a seconda del suffisso:
+\begin{itemize}
+    \item[$-$]\textbf{l}: gli argomenti da passare al 
+    programma da caricare vengono specificati mediante una 
+    \underline{lista} di parametri. \textit{es. execl()}.
+    \item[$-$]\textbf{p}: il nome del file eseguibile 
+    specificato come argomento della system call viene 
+    ricercato nel \underline{PATH} contenuto nell'ambiente 
+    del processo. \textit{es. execlp()}.
+    \item[$-$]\textbf{v}: gli argomenti da passare al
+    programma da caricare vengono specificati mediante 
+    un \underline{vettore di parametri}. \textit{es. execv()}
+    \item[$-$]\textbf{e}:la system call riceve anche un
+    vettore (envp[]) che rimpiazza l'environment (path, 
+    direttorio corrente, ...) del processo chiamante. \textit{es.
+    execle()}
+\end{itemize}
+
+\noindent\fbox{%
+\parbox{\textwidth}{%
+    \begin{center}
+        \textbf{int execl(char* pathname, char* arg0, ... ,
+         char argN, (char*)0);}
+    \end{center}
+    }%
+}
+\medskip
+
+\begin{enumerate}
+    \item  \textbf{Pathname}: nome del file eseguibile, 
+    \underline{già compilato}.
+    \item \textbf{Arg0}: nome del programma.
+    \item \textbf{Arg1, ... , ArgN}: eventuali parametri.
+    \item \textbf{(char*)0}: delimita la fine dei parametri,
+    è un puntatore nullo
+\end{enumerate}
+
+\noindent Es. execl("/bin/ls","ls", "-l", "miao", (char*)0);
+
+\noindent N.B. una exec non restituisce nulla al processo
+che la esegue perché il codice viene cambiato. Il valore di ritorno
+ha senso solamente in caso di errore. Per leggere l'errore si usa
+l'altra primitiva "perror"(vedi sotto).
+\medskip
+
+\noindent\fbox{%
+\parbox{\textwidth}{%
+    \begin{center}
+        \textbf{int execve(char *pathname, char *argV[],
+         char * env[]);}
+    \end{center}
+    }%
+}
+\medskip
+
+\begin{enumerate}
+    \item  \textbf{Pathname}: nome del file eseguibile, 
+    \underline{già compilato}.
+    \item \textbf{ArgV[ ]}: è il vettore degli argomenti
+    del programma da eseguire. 
+    \textit{es: char *argv[]={"ls", "-l", (char *)0};}
+    \item \textbf{Env[ ]}: è il vettore delle variabili 
+    di ambiente da sostituire all'ambiente del processo.
+    \textit{esempio: 
+    char *env[ ]={"USER=edoardo",
+     "PATH=/home/edoardo/provaExec/", (char*)0 };}
+\end{enumerate}
+
+\subsection{Perror()}
+\noindent Per convenzione le system call restituiscono 
+il valore -1 in caso di errore. Inoltre nei sistemi UNIX ogni 
+system call fallita setta la variabile globale \textbf{errno}.
+In questa variabile sarà quindi salvato il codice d'errore 
+dell'ultima system call eseguita. La corrispondenza tra codice 
+di errore e descrizione è definita in <sys/errno.h>
+
+
+\noindent La system call \textit{perror(stringa)} permette di
+ stampare la stringa passata, in aggiunta alla descrizione 
+ dell'errore dell'ultima system call eseguita.
+
+\begin{lstlisting}[style=CStyle]
+int main(){
+    int pid, status;
+    pid=fork();
+    if(pid<0){
+        perror("Fork fallita:");
+        exit()
+    }
+    else{
+        ...;
+    }
+}
+\end{lstlisting}
+
+\subsection{Include necessari}
+\begin{lstlisting}[style=CStyle]
+    #include <stdlib.h> //exit
+    #include <sys/wait.h> //wait
+    #include <unistd.h> //fork, exec
+    ...
+\end{lstlisting}
+
+\section{Scheduling}
+L'obiettivo principale della multiprogrammazione è la massimizzazione 
+dell'utilizzo della CPU.
+Lo \textbf{scheduler} della CPU: è quella parte del sistema operativo 
+che secondo determinate politiche assegna ai processi in stato 
+di ready, il controllo della CPU.
+Si distinguono quindi due componenti principali in questa 
+attività: lo scheduler decide a quale processo assegnare
+la CPU e a seguito della decisione viene attuato il cambio di
+contesto. Il \textbf{dispatcher} è la parte di SO che
+realizza il cambio di contesto.
+\medskip
+
+\noindent \textit{N.B. quando parliamo di scheduler parliamo
+ di scheduler a breve termine, in quanto nei sistemi moderni
+ lo scheduler a lungo termine è attuato dall'utente. Quello
+ a medio termine invece è lo swapper.
+}
+\medskip
+
+\noindentÈ importante differenziare le parti di esecuzione
+ di un processo:\begin{itemize}
+    \item[$-$] \textbf{I/O bound}: prevalenza di attività di I/0.
+    \item[$-$] \textbf{CPU bound}: prevalenza di utilizzo della CPU.
+  \end{itemize}
+\noindent Gli algoritmi di scheduling si possono 
+classificare in due categorie:
+\begin{itemize}
+    \item[$-$] \textbf{Non pre-emptive}: la CPU rimane allocata al
+    processo running finché esso non si sospende volontariamente
+    o non termina.
+    \item[$-$] \textbf{Pre-emptive}: un processo running può essere
+    prelazionato, cioè lo scheduler può sottrargli la CPU per 
+    assegnarla ad un nuovo processo.
+
+    Ovviamente i sistemi a divisione di tempo hanno sempre 
+    uno scheduling pre-emptive.
+ \end{itemize}
+
+
+\subsection{Criteri di scheduling}:
+\noindent Per analizzare e confrontare i diversi algoritmi 
+di scheduling, vengono considerati alcuni indicatori di
+performance:
+\begin{enumerate}
+    \item \textbf{Utilizzo della CPU}: percentuale media di
+    utilizzo CPU nell'unità di tempo.
+    \item \textbf{Throughput} (del sistema): numero di
+    processi completati nell'unità di tempo.
+    \item \textbf{Tempo di Attesa} (di un processo): tempo
+    totale trascorso nella ready queue.
+    \item \textbf{Turnaround} (di un processo): tempo tra
+    la sottomissione del job e il suo completamento.
+    \item \textbf{Tempo di Risposta} (di un processo): 
+    intervallo di tempo tra la sottomissione e l'inizio
+    della prima risposta (a differenza del turnaround non
+     dipende dalla velocità di risposta delle periferiche 
+     I/O).
+\end{enumerate}
+
+\noindent In generale, devono essere massimizzati
+“utilizzo della CPU” e “throughput” e minimizzati i restanti.
+Non è possibile però, ottimizzare tutti i criteri
+contemporaneamente e quindi, a seconda del sistema operativo,
+le politiche di scheduling possono avere diversi obiettivi.
+
+Per esempio: \begin{itemize}
+    \item \textit{Nei sistemi batch}: massimizzare throughput e
+     minimizzare turnaround
+    \item \textit{Nei sistemi interattivi(UNIX per esempio)}: 
+    minimizzare il tempo medio di risposta dei processi e
+    minimizzare il tempo di attesa.
+\end{itemize}
+
+\subsection{Politiche di scheduling}
+\begin{itemize}
+    \item \textbf{FCFS - first come first served}: la coda
+    dei processi pronti è gestita in modalità FIFO. 
+    E' un algoritmo non pre-emptive: non è possibile influire 
+    sull'ordine dei processi.
+
+
+    \begin{figure}[h!]
+        \begin{center}
+            \includegraphics[width=0.8\linewidth]{img/FCFS.png}  
+            
+            Pa è il tipico esempio di processo CPU bound e 
+            Pb e Pc possono essere I/O bound.
+        \end{center}
+    \end{figure}
+
+
+    Uno dei problema di questa politica è che un processo
+    con \textbf{CPU burst}(tempo di utilizzo della CPU) molto alto,
+    impedisce agli altri processi di utilizzare la risorsa. 
+    In questo caso si parla del cosiddetto \textbf{effetto convoglio},
+    caratterizzato dal fatto che più processi brevi attendono
+    la terminazione di un unico processo più corposo.
+    
+    \item \textbf{SJF - shortest job first}: per ogni processo
+    nella ready queue (coda dei processi pronti) viene 
+    stimata la lunghezza del CPU burst e viene schedulato il
+    processo con il CPU burst più corto. Questo algoritmo 
+    ottimizza il tempo di attesa e può essere: non pre-emptive 
+    e pre-emptive. In questo ultimo caso se nella coda
+    arriva un processo con CPU burst minore del CPU burst 
+    rimasto al processo in stato di running).
+
+    \begin{figure}[h!]
+        \begin{center}
+            \includegraphics[width=0.8\linewidth]{img/SJf.png}  
+        \end{center}
+    \end{figure}
+
+    \item   \textbf{RR - Round Robin}: Tipicamente utilizzata 
+    nei sistemi time sharing: la coda dei processi è gestita
+    come una coda FIFO circolare. Ad ogni processo viene 
+    allocata la CPU per un intervallo di tempo costante (\underline{time slice}),
+    scaduto questo tempo il processo viene re-inserito in coda
+    e la CPU passa ad un altro processo. La RR può essere vista
+    come un estensione del FCFS con pre-emption periodica.
+
+    Questa politica è detta \textbf{fair}, cioè tutti i
+    processi vengono trattati in modo equo. Questo però,
+    può generare un problema, siccome non tutti i processi 
+    sono uguali. Il Sistema operativo per esempio non
+    può avere lo stesso trattamento di un processo user.
+    \medskip
+
+    L'efficienza di questa politica di gestione varia in base
+    al time slice:\begin{itemize}
+    \item[$-$] \textit{time slice piccolo}: tanti context switch: 
+    overhead si alza.
+    \item[$-$] \textit{time slice alto}: overhead basso ma
+    tempi di risposta più alti.
+    \end{itemize}
+
+    \item \textbf{Con priorità}: ad ogni processo vine assegnata una priorità, 
+    che può essere:\begin{itemize}
+        \item \underline{Definita internamente}: il sistema 
+        operativo attribuisce ad ogni processo una priorità in
+        base a politiche interne.
+        \item \underline{Esternamente}: criteri esterni al
+        sistema operativo, stabiliti per esempio dall'utente.(es syscall \textbf{nice}
+        in UNIX)
+    \end{itemize}
+
+    \noindent Lo scheduler seleziona il processo con priorità  più alta
+    e nel caso di priorità uguale si attua la politica 
+    FCFS.
+    Le priorità possono essere costanti o variare dinamicamente. 
+    In generale ogni politica basata su certe caratteristiche dei processi 
+    (come priorità, SJF ecc...)presenta un problema:
+    la \textbf{starvation} dei processi.
+    In altre parole, la starvation si verifica 
+    quando uno o più processi di priorità bassa vengono
+    lasciati indefinitamente nella coda dei processi pronti,
+    perché vi è sempre un processo pronto di priorità più
+    alta. La soluzione a questo problema è la modifica 
+    dinamica delle priorità, come ad esempio, la priorità
+    decresce al crescere del tempo di CPU giù utilizzato
+    (tecnica di \textbf{aging, feedback negativo}), mentre cresce
+    dinamicamente con il tempo di attesa del processo (tecnica di 
+    \textbf{promotion, feedback positivo}).
+\end{itemize}
+
+\noindent Nei sistemi operativi reali, spesso si combinano diversi
+algoritmi di scheduling. Un esempio può essere il \textbf{multiple 
+level feedback queues - MLFQ}. Questa politica prevede più code
+associate a diversi livelli di priorità. Ogni coda può avere
+la propria politica di gestione, RR o FCFS. I processi
+possono spostarsi tra livelli attraverso i meccanismi di 
+aging e i meccanismi di promotion. Di base lo scheduler 
+parte  dalla coda con priorità più alta e sceglie il primo
+ processo che trova, saltando di fatto le code vuote.
+
+ \begin{figure}[h!]
+    \begin{center}
+        \includegraphics[width=0.8\linewidth]{img/multi_level.png}  
+    \end{center}
+\end{figure}
+
+\begin{itemize}
+    \item \textbf{Politica di scheduling di UNIX}: privilegiare
+    i processi interattivi (cioè i processi con un basso CPU burst),
+    aggiornamento dinamico delle priorità.    
+    L'utente può soltanto diminuire la priorità di un processo: 
+    comando nice. Alcuni scheduler utilizzano come architettura
+    MLFQ: sono presenti 160 livelli di priorità,
+    più è alta la priorità di un processo, più basso è il suo
+    livello. Esiste un livello di riferimento \textit{pzero}
+    che funge da spartiacque tra i processi utente e quelli
+    di sistema.
+
+    \item \textbf{Scheduling dei thread Java}: la JVM usa 
+    una politica di scheduling pre-emptive e basata 
+    su priorità.
+    
+    
+\end{itemize}
+
+\subsubsection{Stima del CPU burst}
+In generale è molto difficile stimare il 
+CPU burst di un processo. Quello che si fa è stimare il CPU 
+burst in base alla storia. Un processo, statisticamente, si 
+comporterà come nella sua storia più recente.
+
+\noindent \textbf{Exponential averaging}:
+
+\medskip
+\noindent\fbox{%
+\parbox{\textwidth}{%
+    \begin{center}
+        \large\textbf{$\tau_{n+1} = \alpha t_n + (1-\alpha)\tau_n$}
+    \end{center}
+    }%
+}
+\medskip
+
+\noindent
+\begin{itemize}
+    \item[$-$] $t_n$ : tempo utilizzato dal processo la volta precedente.
+    \item[$-$] $\tau_n$: tempo stimato per il processo la volta precedente.
+    \item[$-$] $\tau_{n+1}$: tempo stimato per la prossima volta. 
+    \item[$-$] $\alpha$: numero compreso tra 0 e 1.
+\end{itemize}
+
+\noindent Ricordati che $\tau_n$ può essere a sua volta scritto come questa formula. 
+Si può notare che più $\alpha$ è vicino allo zero meno la stima dipenderà dai valori
+precedenti del reale valore utilizzato dal processo la volta precedente. Mentre 
+più $\alpha$ tenderà a 1, più dipenderà dalla storia precedente alla stima.
+
+
+\begin{figure}[h!]
+    \begin{center}
+        \includegraphics[width=0.5\linewidth]{img/cpu_burst.png}  
+        \caption{esempio con $\alpha = 0.5$}
+    \end{center}
+\end{figure}
+
+\pagebreak
+
+\section{Comunicazioni tra processi}
+Processi interagenti: due processi sono interagenti se l'esecuzione
+di uno è influenzato dall'esecuzione di un altro e/o viceversa. 
+
+\noindent Esistono diversi tipi di interazione:
+\begin{itemize}
+    \item \textbf{Cooperazione}: interazione prevedibile e desiderata,
+    i processi collaborano per il raggiungimento di un fine comune.
+    Fanno parte della stessa applicazione solitamente.
+    \item \textbf{Competizione}: interazione prevedibile ma 
+    “non desiderata”.Solitamente processi di applicazioni diverse 
+    che accedono alla stessa risorsa.
+    \item \textbf{Interferenza}: interazione non prevista e non
+    desiderata.
+\end{itemize}
+
+\noindent L'interazione può avvenire mediante due meccanismi:
+\begin{itemize}
+    \item \textbf{Comunicazione}: scambio di informazioni tra i 
+    processi interagenti.
+    \item \textbf{Sincronizzazione}: imposizione di vincoli 
+    temporali sull'esecuzione dei processi.
+\end{itemize}
+\noindent Modelli di interazione:
+    \begin{itemize}
+    \item \textbf{Memoria ad ambiente locale (processi pesanti)}:
+    I processi non condividono memoria e interagiscono mediante
+    trasmissione/ricezione di messaggi e la sincronizzazione avviene
+     attraverso lo scambio di eventi come i segnali. Un'esempio è UNIX.
+     \medskip
+
+    N.B. in questo modello i meccanismi di comunicazione/sincronizzazione
+    vengono realizzati dal sistema operativo.
+
+    \item \textbf{Memoria ad ambiente globale (thread))}: Il sistema 
+    operativo consente ai processi di condividere memoria: 
+    l'interazione avviene tramite l'accesso a variabili condivise e
+    opportuni strumenti di sincronizzazione come semafori e lock.
+    \medskip
+
+    N.B. in questo modello solo i meccanismi di sincronizzazione 
+    vengono realizzati dal sistema operativo. (la comunicazione
+     viene realizzata dal programmatore)
+\end{itemize}
+
+\noindent Il sistema operativo offre dei meccanismi a supporto della 
+comunicazione tra i processi, quali, \textbf{send} (spedizione di messaggi) 
+e \textbf{receive} (ricezione di messaggi). Il \textbf{naming} è il 
+modo con cui viene identificato il destinatario della comunicazione.
+La comunicazione avviene attraverso un \textbf{canale di comunicazione} 
+,astrazione creata dal sistema operativo per permettere a due
+processi di comunicare. Ogni canale di comunicazione ha determinata
+\textbf{capacità}, che indica il massimo numero di messaggi che è
+in grado di contenere contemporaneamente.
+
+\noindent La comunicazione ha varie caratteristiche:
+\begin{itemize}
+    \item[$-$] \textbf{Tipo della comunicazione}: diretta o
+    indiretta, simmetrica o asimmetrica, bufferizzata o no \dots
+    \item[$-$] \textbf{Caratteristiche del canale}: monodirezionale o
+    bidirezionale, uno-uno o molti-uno ecc, capacità, modalità di creazione:
+    automatica o non automatica.
+    \item[$-$] \textbf{Caratteristiche del messaggio}:dimensione, tipo. 
+\end{itemize}
+
+\noindent Esistono due modalità di specifica del destinatario:
+\begin{enumerate}
+    \item \textbf{Comunicazione diretta}: al messaggio viene associato il
+     pid del processo destinatario. I due processi devono conoscersi 
+     reciprocamente così da creare automaticamente il canale di comunicazione.
+     Questo tipo di approccio presenta una scarsa modularità, in quanto,
+     la modifica di un processo implica la revisione di tutte
+     le operazioni di comunicazione (difficoltà di riutilizzo).
+      Un esempio potrebbe essere "send(pid, msg)". 
+
+     Il canale viene creato automaticamente ed è \underline{punto-punto}, 
+     \underline{univoco} per la coppia (P1,P2)  e \underline{bidirezionale}.
+
+     \item \textbf{comunicazione indiretta}:
+      il messaggio viene indirizzato ad una mailbox dalla quale il
+      destinatario potrà prelevarlo. I processi non
+      sono tenuti a conoscersi in quanto i messaggi verranno depositati/prelevati 
+      direttamente dalla mailbox, che fungerà da canale di comunicazione.
+     \textbf{Una mailbox} è una risorsa astratta condivisibile da più processi che funge 
+     da contenitore messaggi. 
+
+     Attraverso la mailbox, è possibile associare più canali di comunicazione alla stessa
+     coppia mittente destinatario. A differenza della comunicazione diretta, questo canale di
+     comunicazione deve essere creato in modo esplicito, non essendo di fatto automatico.
+    \medskip
+
+     Il vantaggio di utilizzare questo metodo è il poter associare il canale a più di
+     due processi, creando potenzialmente una comunicazione molti a molti. In questo caso
+     la mailbox viene detta di \textit{sistema}.
+     Nel caso di comunicazione asimmetrica invece, la mailbox
+     si definisce \textit{porta} (terminologia presa dal modello
+     client-server).
+     
+\end{enumerate}
+\medskip
+
+\noindent \textbf{Comunicazione asimmetrica}: avendo la possibilità di non far conoscere al
+ destinatario il pid del mittente per ricevere il messaggio(come il client server), è possibile
+ stabilire comunicazioni asimmetriche molti a uno.
+\medskip
+
+\subsection{Buffering del canale}
+\noindent La capacità del canale di comunicazione indica la
+ lunghezza della coda, gestita secondo la politica FIFO, in cui 
+ vengono inseriti i messaggi spediti dal/i mittente/i. Di fatto
+ il canale di comunicazione è gestito come un buffer. 
+\medskip
+
+\noindent Se la \underline{capacità del canale è nulla},
+ allora significa che il canale non può bufferizzare alcun
+messaggio. In questo caso si dice che la comunicazione è sospensiva:
+affinché la comunicazione avvenga con successo è necessario
+sincronizzare i due processi, sospendendo il processo mittente/destinatario.
+Parliamo di comunicazione \textbf{sincrona}.
+
+
+\begin{figure}[h!]
+    \begin{center}
+        \includegraphics[width=0.5\linewidth]{img/send_sospensiva.png}  
+        \caption{In questo caso il processo mittente viene sospeso}
+    \end{center}
+\end{figure}
+
+\noindent Ovviamente vale il contrario: se arriva prima la receive, il 
+processo destinatario si sospende.
+\medskip
+
+\noindent Nel caso in cui la capacità sia diversa da zero, si 
+distinguono tre casi:
+\begin{itemize}
+    \item[$-$] \underline{Buffer non pieno}: un nuovo messaggio viene
+    posto in fondo alla coda.  
+    \item[$-$] \underline{Buffer pieno}: la send è sospensiva
+    \item[$-$] \underline{Buffer vuoto}: la receive può(esistono
+    delle implementazioni che avvisano che il buffer è vuoto) essere 
+    sospensiva.   
+    \item[$-$] \underline{Buffer illimitato}: la send non è
+    sospensiva. 
+\end{itemize}
+
+
+\noindent In caso la capacità sia maggiore di zero, la semantica della 
+comunicazione è diverso: si dice che la send è \textbf{asincrona}.
+\pagebreak
+
+\subsubsection{Send con sincronizzazione estesa}
+È un tipo di comunicazione sincrona, in cui il
+mittente si sospende fino a che il destinatario non
+restituisce una risposta (\textbf{reply}) al messaggio 
+inviato. Il mittente potrebbe richiedere una \textbf{Remote Procedure
+Call- RPC} per esempio.
+\medskip
+
+\noindent Questa tipologia ricorda molto l'architettura client-server. 
+
+\begin{figure}[h!]
+    \begin{center}
+        \includegraphics[width=0.7\linewidth]{img/RPC.png}  
+        \caption{In questo caso il processo mittente viene sospeso fino al reply}
+    \end{center}
+\end{figure}
+
+\subsection{Comunicazione in ambiente UNIX}
+\noindent La comunicazione in ambiente UNIX è sfrutta il modello
+a \textit{memoria locale}.
+Esistono tre meccanismi di comunicazione:
+\begin{enumerate}
+    \item \textbf{Pipe}:Comunicazione locale nell'ambito della 
+    stessa gerarchia di processi.
+    \item \textbf{Fifo}: Comunicazione locale tra processi di 
+    gerarchie diverse.
+    \item \textbf{Socket}: comunicazione in ambiente distribuito,
+    tra processi in esecuzione su nodi diversi di una rete.
+\end{enumerate}
+
+In questo corso ci concentreremo principalmente sulla pipe, perché
+è un canale di comunicazione standard nei sistemi UNIX (la fifo non è troppo standard).
+La pipe è un canale di comunicazione:
+\begin{itemize}
+    \item[$-$] \textit{Indiretta (senza naming esplicito).}
+    \item [$-$] \textit{Canale unidirezionale molti-a-molti.}
+    \item [$-$] \textit{Bufferizzata con capacità limitata.(buffsize)
+    Quindi la comunicazione è asincrona in generale e non sospensiva.}
+\end{itemize}
+
+\subsection{Sincronizzazione in ambiente UNIX}
+La sincronizzazione permette di imporre vincoli sulle operazioni
+dei processi interagenti. Ovviamente nel modello a memoria globale
+sarà necessaria una sincronizzazione con maggiore complessità, in quanto
+in quanto deve essere garantita la mutua esclusione dei processi nell'utilizzo
+delle risorse.
+In ambiente UNIX gli accessi alle risorse "condivise" vengono
+controllati e coordinati dal sistema operativo. La sincronizzazione
+avviene mediante meccanismi offerti dal sistema operativo che consentono la
+notifica.
+
+\subsection{Segnali}
+Un segnale notifica un evento in modo asincrono, proprio come 
+un'interruzione. Quando un qualunque processo riceve un segnale,
+il processo si interrompe e gestisce l'evento.
+
+\noindent In generale un segnale può essere generato dal kernel verso dei
+ processi utente e da processi utente verso processi utente. 
+
+Possiamo suddividere i mittenti dei segnali nel seguente modo:
+\begin{enumerate}
+    \item Generati da terminale.
+    \item Generati dal kernel per \textbf{eccezioni HW}
+     (come per esempio violazione dei limiti Di
+     accesso in memoria)
+    \item Generati dal kernel per \textbf{interruzioni software}
+    \item Generati da altri processi.
+\end{enumerate}
+\medskip
+
+\noindent Quando un processo riceve un segnale può comportarsi in tre modi 
+diversi:
+\begin{enumerate}
+    \item \textit{Gestire} il segnale eseguendo una funzione handler definita dal
+    programmatore.
+    \item \textit{Gestire} il segnale eseguendo un'azione predefinita
+     dal S.O. (\textbf{azione di default}).
+    \item \textit{Ignorare} il segnale (nessuna reazione).
+\end{enumerate} 
+
+\noindent La gestione del segnale è asincrona e analoga alla gestione 
+di un interrupt da parte della CPU. Interruzione asincrona, 
+gestione dell'evento e infine ritorno all'esecuzione del codice.
+\medskip
+
+\noindent In qualunque sistema UNIX esistono vari tipi di segnale associati
+ad un particolare evento, ognuno identificato con un intero 
+che prevede una specifica azione di default. In Linux solitamente
+sono presenti 32 segnali. L'intero identificativo di un segnale è 
+rappresentato da un nome simbolico definite in \textbf{<signal.h>}.
+Questo serve per garantire la portabilità tra i vari sistemi: 
+il numero del segnale può cambiare, mentre il nome resta invariato.
+\medskip
+
+\noindent Un possibile esempio di porzione di signal.h:
+\begin{lstlisting}[style=CStyle]
+    #define SIGHUP 1 /* Hangup (POSIX). Action: exit */
+    #define SIGINT 2 /* Interrupt (ANSI). Action: exit (^C)*/
+    #define SIGQUIT 3 /* Quit (POSIX). Action: exit, core dump*/
+    #define SIGILL 4 /* Illegal instr.(ANSI).Action: exit,core dump */
+    ...
+    #define SIGKILL 9 /* Kill, unblockable (POSIX). Action: exit*/
+    #define SIGUSR1 10 /* User-defined signal 1 (POSIX). Action: exit*/
+    #define SIGSEGV 11 /* Segm. violation (ANSI). Act: exit,core dump */
+    #define SIGUSR2 12 /* User-defined signal 2 (POSIX).Act: exit */
+    #define SIGPIPE 13 /* Broken pipe (POSIX).Act: exit */
+    #define SIGALRM 14 /* Alarm clock (POSIX). Act: exit */
+    #define SIGTERM 15 /* Termination (ANSI). Act:exit*/
+    ...
+    #define SIGCHLD 17 /* Child status changed (POSIX).Act: ignore */
+    #define SIGCONT 18 /* Continue (POSIX).Act. ignore */
+    #define SIGSTOP 19 /* Stop, unblockable (POSIX). Act: stop */
+\end{lstlisting}
+
+\noindent \textbf{SIGUSR1} e \textbf{SIGUSR2} sono segnali "liberi", cioè è
+possibile sovrascrivere l'azione di default del SO, con una propria 
+implementazione atta alla \textit{sincronizzazione} dei propri processi.
+
+\noindent \textbf{SIGKILL} e \textbf{SIGSTOP} sono segnali \textbf{unblockable}
+e \underline{non} è possibile ignorarli.
+
+
+\subsection{Gestione dei segnali}
+\noindent\fbox{%
+\parbox{\textwidth}{%
+    \begin{center}
+        \textbf{void (* signal(int sig, void (*func)()))(int);}
+    \end{center}
+    }%
+}
+\medskip
+
+\noindent In generale, si imposta nelle prime istruzioni del programma 
+la gestione dei segnali. La funzione richiede l'intero
+ identificativo del segnale e il puntatore alla
+ funzione che gestisce l'interruzione, la quale deve essere del 
+ tipo \textit{void gestore(int);}.L'handler prevede un parametro formale 
+di tipo int che rappresenta il numero del segnale effettivamente
+ ricevuto. Questo è utile per differenziare le gestioni utilizzando 
+ un unico handler.
+
+\noindent La signal restituisce un puntatore al precedente gestore del segnale.
+In caso non vada a buon fine restituisce \textbf{SIG\_ERR}.
+\textit{The void pointer in C (void*) is a pointer which is not
+ associated with any data types. It points to some data 
+ location in the storage means points to the address of 
+ variables. It is also called general purpose pointer. In C, malloc() 
+and calloc() functions return void * or generic pointers}
+\medskip
+
+\noindent Nel caso io voglia ignorare l'interruzione basta 
+specificare il valore \textbf{SIG\_IGN} al posto della
+funzione. Nel caso volessi ripristinare 
+la gestione dell'evento con l'azione di default 
+basta specificare \textbf{SIF\_DFL}.
+
+\begin{lstlisting}[style=CStyle]
+    #include <signal.h>
+    void gestore(int);
+    ...
+    int main()
+    {...
+    signal(SIGUSR1, gestore); /*SIGUSR1 gestito */
+    ...
+    signal(SIGUSR1, SIG_DFL); /*SIGUSR1 torna a default */
+    signal(SIGKILL, SIG_IGN); /*errore! SIGKILL non e
+    ignorabile */
+    ...
+    }
+\end{lstlisting}
+
+\subsubsection{SIGCHLD}
+SIGCHLD è il segnale che il kernel invia a
+un processo padre quando il figlio termina, è possibile
+svincolare il padre da un'attesa esplicita della terminazione 
+del figlio, mediante un'apposita funzione handler per la
+gestione dell'evento. N.B. l'azione di default per
+SIGCHLD è SIG\_IGN (per questo è necessaria la wait).
+Attenzione però, solo con wait possiamo conoscere lo stato
+del figlio. Quindi è necessario che l'handler richiami la wait, 
+che in questo caso non sarà sospensiva poiché è sicuro che sia presente
+un figlio.
+
+\subsubsection{Fork e segnali}
+Le associazioni segnali-azioni vengono registrate nella user structure 
+del processo e quindi di tutti i suoi figli.  Per questo anche i figli 
+ereditano le informazioni riguardanti la gestione degli 
+eventi. Ovviamente le successive signal del figlio non hanno 
+effetto sulla gestione dei segnali del padre, perché appunto è 
+una copia.
+
+\subsubsection{Exec e segnali}
+Dopo una exec() un processo mantiene la stessa user structure,  
+tranne le informazioni legate al codice del processo (ad 
+esempio, le funzioni di gestione dei segnali, che dopo l'exec
+non sono più visibili). Tutti gli handler settati
+vengono ripristinati a quelli di default, mentre quelli 
+ignorati o a default rimangono invariati.
+
+\subsection{Kill}
+\noindent \fbox{%
+\parbox{\textwidth}{%
+    \begin{center}
+        \textbf{int kill(int pid, int sig);}
+    \end{center}
+    }%
+}
+\medskip
+
+\noindent I processi possono inviare segnali ad altri 
+processi con la kill. N.B. Quando si parla di gruppo con groupId x, si intende la parte di gerarchia dei processi con
+padre avente pid = x.
+
+
+\begin{figure}[h!]
+    \begin{center}
+        \includegraphics[width=0.7\linewidth]{img/groupprocess.png}      \end{center}
+\end{figure}
+
+\begin{itemize}
+    \item \textbf{sig}: è l'intero che individua il segnale da 
+    inviare (per esempio SIGUSR1).
+    \item \textbf{pid}: \begin{enumerate}
+        \item se pid$>$0 l'intero è il pid dell'unico processo 
+        destinatario.
+        \item se pid=0 il segnale è spedito a tutti i
+         processi appartenenti al gruppo del mittente.
+        \item pid$<$-1 il segnale è spedito a tutti i processi con
+         groupId uguale al valore assoluto di pid.
+        \item pid=-1 vari comportamenti possibili 
+        (POSIX non specifica).
+    \end{enumerate}
+\end{itemize}
+
+\subsection{Sleep}
+
+\noindent \fbox{%
+\parbox{\textwidth}{%
+    \begin{center}
+        \textbf{unsigned int sleep(unsigned int N);}
+    \end{center}
+    }%
+}
+\medskip
+
+\noindent Provoca la sospensione del processo per un massimo di
+ N secondi al massimo. Se il processo riceve un segnale
+ durante il periodo di sospensione viene risvegliato
+ prematuramente.
+ Restituisce 0 se la sospensione non è stata interrotta da
+ segnali oppure, se il risveglio è stato causato da un segnale al 
+tempo Ns, restituisce il numero di secondi non 
+utilizzati nell'intervallo di sospensione (N-Ns).
+
+\subsection{Alarm}
+\noindent \fbox{%
+\parbox{\textwidth}{%
+    \begin{center}
+        \textbf{unsigned int alarm(unsigned int N);}
+    \end{center}
+    }%
+}
+\medskip
+
+\noindent Imposta un timer che dopo N secondi invierà al processo il 
+segnale SIGALRM. Ritorna 0 se non vi erano time-out impostati
+ in precedenza oppure il numero di secondi mancante allo scadere 
+ del time-out precedente.
+
+\noindent NB La alarm() non è una funzione sospensiva, il processo 
+continua la sua normale esecuzione. L'azione di default associata
+a SIGALRM è la terminazione.
+
+\subsection{Pause}
+\noindent \fbox{%
+\parbox{\textwidth}{%
+    \begin{center}
+        \textbf{int pause(void);}
+    \end{center}
+    }%
+} 
+\medskip
+
+\noindent Sospende il processo fino alla ricezione di un qualunque 
+segnale.
+Ritorna -1 (errno = EINTR), ma solo in caso di errore in quanto
+ non dovrebbe essere possibile accedere al valore di ritorno
+ (viene invocato direttamente l'handler). 
+
+ \subsection{Sicurezza dei segnali}
+ Durante l'esecuzione di un syscall è possibile che il processo
+ riceva un segnale. Esistono tre alternative di gestione:
+ \begin{enumerate}
+     \item Innestamento delle routine di gestione.
+     \item Perdita del segnale.
+     \item Accodamento dei segnali.
+ \end{enumerate}
+
+ \noindent In generale solo le syscall cosiddette \textbf{slow}, sono
+ interrompibili da un segnale. In questo caso la syscall soggetta 
+ dell'interruzione restituirà -1/setterà errno a EINTR.
+
+ \noindent In questo caso in base alla situazione e alla syscall, la ri-esecuzione
+ può essere automatica oppure comandata dal processo basandosi sul 
+ valore restituito.
+\pagebreak
+
+\section{File system}
+
+\noindent E' quella componente del sistema operativo che
+fornisce i meccanismi di accesso e memorizzazione delle
+informazioni (programmi e dati) allocate in memoria di 
+ massa.
+
+ Esso permette di realizzare i concetti astratti di:
+ \begin{itemize}
+     \item[$-$]\textbf{File}: unità logica di memorizzazione.
+     \item[$-$]\textbf{Direttorio}: insieme di file.
+     \item[$-$]\textbf{Partizione}: insieme di file associato
+     ad in particolare dispositivo fisico.
+ \end{itemize}
+
+ \subsection{Organizzazione del file system}
+La struttura di un file system  può essere rappresentata da
+un insieme di componenti organizzate in vari livelli:
+
+\begin{figure}[h!]
+    \begin{center}
+        \includegraphics[width=0.63\linewidth]{img/filesystem_gerarchia.png}      \end{center}
+\end{figure}
+
+\begin{itemize}
+    \item \textbf{Struttura logica}: presenta alle applicazioni
+    una visione astratta delle informazioni memorizzate,
+    basata su file, directory, partizioni, ecc..
+    Realizza le operazioni di gestione di file e directory:
+    copia, cancellazione, spostamento, ecc.
+    \item \textbf{Accesso}: definisce e realizza i meccanismi
+    per accedere al contenuto dei file; in particolare:
+        \begin{itemize}
+            \item Definisce l'unità di trasferimento da/verso file:
+            record logico.
+            \item Realizza i metodi di accesso (sequenziale,
+            casuale, ad indice).
+            \item Realizza i meccanismi di protezione.
+        \end{itemize}
+    \item \textbf{Organizzazione fisica}: rappresentazione di
+    file e directory sul dispositivo:
+        \begin{itemize}
+            \item \textbf{Allocazione} dei file sul
+            dispositivo (unità di memorizzazione = blocco):
+            mapping di record logici su blocchi. Vari metodi
+            di allocazione.
+            \item \textbf{Rappresentazione} della struttura 
+            logica sul dispositivo.
+        \end{itemize}
+    \item \textbf{Dispositivo Virtuale}: presenta una vista astratta del dispositivo, che
+    appare come una sequenza di blocchi, ognuno di dimensione data
+    costante.
+\end{itemize}
+
+\subsection{Struttura logica}
+\noindent Un file è un insieme di informazioni (programmi, dati 
+(in rappresentazione binaria), dati (in rappresentazione testuale)).
+Ogni file è individuato da (almeno) un nome simbolico 
+(Linux permette di averne più di uno) ed è
+ \underline{caratterizzato da un insieme di attributi:}
+tipo, indirizzo(puntatore alla memoria secondaria), dimensione,
+data e ora dall'ultima modifica.
+
+\noindent Nei sistemi multiutente è specificato anche il \textbf{proprietario}
+e i \textbf{diritti di accesso} per gli altri utenti del sistema.
+
+\noindent \fbox{%
+\parbox{\textwidth}{%
+    \begin{center}
+        \textbf{Descrittore del file:}
+        è la struttura dati che contiene gli attributi del
+        file. Ogni descrittore di file deve essere
+        memorizzato in modo persistente:il SO mantiene l'insieme dei descrittori
+        di tutti i file presenti nel file system in
+        apposite strutture in memoria secondaria.
+    \end{center}
+    }%
+} 
+\medskip
+
+\subsubsection{Directory}
+\noindent L'organizzazione delle directory varia da sistema operativo a
+sistema operativo. Gli schemi più comuni che sono stati adottati sono:
+a livello, a due livelli, ad albero, a grafo ciclico.
+\medskip
+
+\begin{itemize}
+    \item  \noindent \textbf{A livello:} una sola directory per
+ogni file system.
+
+\begin{figure}[h!]
+    \begin{center}
+        \includegraphics[width=0.7\linewidth]{img/unico_livello.png}      
+    \end{center}
+\end{figure}
+
+    Difficoltà di gestione della multiutenza e dell'unicità 
+    dei nomi.
+    \item \textbf{Due livelli}: primo livello (directory principale): contiene una
+        directory per ogni utente del sistema. Secondo livello:
+        directory utenti (a un livello).
+        \begin{figure}[h!]
+            \begin{center}
+                \includegraphics[width=0.7\linewidth]{img/due_livelli.png}      
+            \end{center}
+        \end{figure}
+    \item \textbf{Struttura ad albero}: organizzazione gerarchica 
+    a N livelli. Ogni direttorio può contenere file e altri direttori.
+
+    \begin{figure}[h!]
+        \begin{center}
+            \includegraphics[width=0.7\linewidth]{img/albero.png}      
+        \end{center}
+    \end{figure}
+\pagebreak
+    \item \textbf{Struttura a grafo aciclico (es. UNIX)}: 
+    estende la struttura ad albero con la possibilità di
+    inserire \textbf{link} differenti allo stesso file.
+
+    \begin{figure}[h!]
+        \begin{center}
+            \includegraphics[width=0.7\linewidth]{img/aciclico.png}      
+        \end{center}
+    \end{figure}
+\end{itemize}
+
+\subsubsection{Partizione}
+Una partizione contiene un'unica struttura fra quelle sopra elencate.
+Perciò se un file system contiene più di una partizione, allora 
+contiene più schemi ad albero, a grafo aciclico ecc...( di fatto una
+partizione è una gerarchia).
+Quello che il filesystem fa solitamente è di collegare più partizioni
+ logicamente, attraverso il meccanismo di mounting. Alcuni SO 
+ richiedono solitamente il \textbf{mounting esplicito} della partizione
+ all'interno del file system.
+
+ \subsection{Accesso}
+ \noindent Compito del SO è consentire l'accesso \textbf{on-line} ai file: ogni
+ volta che un processo modifica un file, tale cambiamento
+ è immediatamente visibile a tutti gli altri processi.
+
+\noindent Ogni volta che devo accedere ad un file devo sapere:
+ indirizzi dei record logici a cui accedere, altri attributi del file 
+(diritti di accesso, ecc.), contenuto del file(record logici).
+Se ogni volta devo accedere a tutte queste informazioni passando per
+la memoria secondaria è un costo elevatissimo. 
+Perciò ogni volta che si apre un file il SO aggiorna in memoria una struttura
+dati che registra i file attualmente in uso (i descrittori dei file aperti).
+Inoltre viene fatto il \textbf{memory mapping} dei file aperti:
+i file aperti (o porzioni di essi) vengono temporaneamente copiati
+in memoria centrale rendendo gl accessi più veloci.
+
+\noindent Questo necessita di due operazioni aggiuntive:
+\begin{itemize}
+    \item \textbf{Apertura}: introduzione di un nuovo elemento
+    nella tabella dei file aperti e eventuale memory mapping 
+    del file.
+    \item \textbf{Chiusura}: salvataggio del file in memoria secondaria ed
+    eliminazione dell'elemento corrispondente dalla tabella dei
+    file aperti.
+\end{itemize}
+
+\subsubsection{Struttura interna dei file}
+Ogni dispositivo di memorizzazione secondaria viene partizionato
+in blocchi(o record fisici).
+\medskip
+
+\noindent \fbox{%
+\parbox{\textwidth}{%
+    \begin{center}
+        \textbf{Blocco}: unità di trasferimento fisico nelle
+        operazioni di I/O da/verso il dispositivo. Sempre di
+        dimensione fissa.
+    \end{center}
+    }%
+} 
+\medskip
+
+\noindent Le applicazioni vedono il file come un insieme di record logici:
+\medskip
+
+\noindent \fbox{%
+\parbox{\textwidth}{%
+    \begin{center}
+        \textbf{Record logico}: unità di trasferimento logico nelle
+        operazioni di accesso al file (es. lettura, scrittura di
+        blocchi). Solitamente di dimensione variabile.
+    \end{center}
+    }%
+} 
+\medskip
+
+\noindent Vale la relazione: \textbf{RECORD LOGICO $<<$ BLOCCO}. Quindi 
+i record logici vengono \textbf{impaccati} all'interno dei blocchi.
+Sarà il sistema operativo quindi che si occuperà di stabilire
+\textit{la corrispondenza tra record logici e blocchi}.
+\medskip
+
+\noindent L'accesso a file può avvenire secondo varie modalità: accesso sequenziale, 
+accesso diretto, accesso a indice. 
+Il metodo di accesso è indipendente: dal tipo di dispositivo utilizzato e
+dalla tecnica di allocazione dei blocchi in memoria secondaria.
+
+\subsubsection{Accesso sequenziale}
+\noindent Il file è  rappresentato a livello di accesso come 
+una sequenza \textbf{ORDINATA [R1 , R2 , ..., RN ]} di record logici.
+
+\noindent Per accedere ad un particolare record logico Ri, è necessario
+accedere prima agli (i-1) record che lo precedono nella
+sequenza. Per ogni file aperto quindi verrà mantenuta l'informazione
+del puntatore al record logico corrente. Per leggere/scrive gli
+ il prossimo record logico è possibile usare la \textbf{readnext} e la 
+ \textbf{writenext}. 
+
+\begin{figure}[h!]
+    \begin{center}
+        \includegraphics[width=0.7\linewidth]{img/accesso_sequenziale.png}      
+    \end{center}
+\end{figure}
+
+Questa tecnica di accesso è adottata dalla famiglia UNIX.
+
+\subsubsection{Accesso diretto}
+Il file è un insieme  {R1 , R2 , ..., RN } di record logici
+numerati: si può accedere direttamente a un particolare record logico
+ specificandone il numero.
+
+\noindent È possibile utilizzare operazioni del tipo:
+\textbf{read i} e \textbf{write i}. Questo risulta molto utile
+ quando si vuole accedere a grossi file per estrarre/aggiornare poche
+  informazioni (ad esempio nell'accesso a database).
+
+\subsubsection{Accesso a indice}
+Ad ogni file viene associata una struttura dati contenente
+l'indice delle informazioni contenute. Per accedere a un record
+ logico, si esegue una ricerca nell'indice (utilizzando una chiave).
+ Questo tipo di accesso è poco diffuso.
+
+ \begin{figure}[h!]
+    \begin{center}
+        \includegraphics[width=0.7\linewidth]{img/accesso_indice.png}      
+    \end{center}
+\end{figure}
+
+\subsubsection{Protezione}
+In fase di accesso è necessario garantire la protezione in scrittura, 
+lettura ed esecuzione. In UNIX ogni utente appartiene ad uno o più
+gruppi su cui possono essere definiti dei privilegi di accesso per una
+determinata directory o file. I privilegi sono definiti quindi su tre livelli:
+\textbf{owner, group, public}. Esiste però un superuser che può modificare
+e gestire ogni singolo file/directory.
+
+\subsection{Organizzazione fisica}
+Questo livello si occupa della realizzazione fisica del file system 
+sul dispositivo fisico. In particolare si occuperà di realizzare
+i descrittori dei file e di organizzarli nella memoria secondaria. 
+Inoltre sarà necessario gestire anche lo spazio libero sulla memoria secondaria.
+
+\noindent Il \textbf{blocco} è l'unità di allocazione su disco. Ogni blocco
+è associato ad un unico file e contiene un insieme di record logici.
+Le tecniche più comuni di allocazione su disco sono: \textbf{allocazione
+contigua, allocazione a lista, allocazione a indice}.
+
+\subsubsection{Allocazione contigua}
+Ogni file è mappato su un insieme di blocchi fisicamente contigui.
+Il principale vantaggio è il costo della ricerca di un blocco. possibilità
+di \textit{accesso sequenziale e diretto}.
+\medskip
+
+\noindent Il problema principale è l'individuazione dello spazio
+libero per l'allocazione di un nuovo file. Inoltre si
+crea \textbf{frammentazione esterna}:  man mano che si riempie il disco,
+ rimangono zone contigue sempre più piccole, a volte
+inutilizzabili perché non c'è abbastanza . Questo richiede azioni di
+ \textbf{compattazioni o frammentazione} del disco: si riportano 
+ tutti i blocchi allocati in posizione contigue eliminando gli 
+ spazi tra i file. il costo di quest'operazione è molto onerosa, i
+ file poi potrebbero cambiare di nuovo, quindi va considerata una 
+ minima tolleranza affinché i file possano cambiare.
+ 
+ \noindent Quindi nel descrittore del file è sufficiente salvare
+ dove sta il primo blocco del file.
+
+ \subsubsection{Allocazione a lista concatenata}
+I sistemi Windows utilizzano questa tecnica.
+I blocchi sui quali viene mappato ogni file sono organizzati
+ in una lista concatenata. I vantaggi sono l'eliminazione
+ della frammentazione esterna e un minor costo di allocazione,
+ poiché è facile individuare dove allocare un nuovo file (il 
+ file system mantiene informazione dei blocchi liberi).
+ Non serve che i blocchi siano contigui, basta che sia presente un 
+ numero sufficiente di blocchi sul dispositivo.
+
+ \noindent Gli svantaggi possono essere una minor resistenza ai guasti:
+ se il link è errato c'è una \textit{perdita di concatenamento} e 
+ tutta la coda non potrà mai essere eliminata perché è persa.
+ Inoltre i puntatori occuperanno un certo spazio nel blocco,
+ diminuendone quindi la capacità. 
+ 
+ \noindent L'accesso diretto è più complesso da implementare e
+ il costo di ricerca di un blocco è maggiore. 
+\medskip 
+
+\noindent Quindi nel descrittore del file è sufficiente salvare
+ dove sta il primo blocco del file
+\medskip
+
+\noindent Alcuni SO ( ad es. windows, OS/2, dos, ntfs) realizzano 
+l'allocazione a lista in modo più efficiente e robusto:
+per ogni partizione, viene mantenuta una tabella (\textbf{FAT -
+file allocation table}) in cui 
+ogni elemento rappresenta un blocco fisico. Concatenamento dei
+ blocchi sui quali è allocato un file è rappresentato nella FAT.
+
+
+\begin{figure}[h!]
+        \begin{center}
+            \includegraphics[width=0.3\linewidth]{img/fat.png}      
+        \end{center}
+    \end{figure}
+
+\noindent Questo permette di avere un backup e un metodo 
+di scorrimento della lista più efficiente e veloce.
+
+\subsubsection{Allocazione a indice}
+tutti i puntatori ai blocchi utilizzati per l'allocazione
+ di un determinato file sono concentrati in un unico
+blocco per quel file (\textbf{blocco indice}). Il blocco indice
+ovviamente comporta un maggior utilizzo di memoria, soprattutto se 
+parliamo di file di piccole dimensioni. Solitamente il tempo di accesso
+ di allocazione a lista è più lenta di quella contigua,
+per questo quella a indice può essere un'alternativa.
+
+\noindent I vantaggi sono gli stessi dell'allocazione a lista 
+e in più è facilitata la realizzazione ad accesso diretto(nel blocco 
+indice i blocchi sono sequenziali). Inoltre si ottiene
+maggiore velocità di accesso (rispetto a liste).
+\noindent Quindi nel descrittore del file è sufficiente 
+salvare l'indirizzo del blocco indice.
+\medskip
+
+\noindent Quale tecnica è la migliore? Dipende dal contesto. 
+Esistono sistemi operativi che utilizzano soluzioni ibride in base
+alla dimensione del file (piccola-contigua, grandi-indice).
+Solitamente i fattori da considerare sono:
+\begin{itemize}
+    \item Il grado di utilizzo della memoria.
+    \item Tempo di accesso medio al blocco.
+    \item Realizzazione dei metodi di accesso.
+\end{itemize}
+
+\noindent Solitamente Windows predilige allocazione concatenata con
+supporto a FAT, mentre UNIX predilige quella a indice.
+
+\subsection{Il File System di UNIX}
+L'organizzazione logica di UNIX è a grafo aciclico diretto.
+Il filesystem LINUX è solitamente \textbf{EXT}.
+Tutto in UNIX è un file, e sono divisi in tre tipi di file:
+\textbf{file ordinari, direttori, dispositivi fisici(nella directory
+/dev)}.
+
+\noindent Ad ogni file è associato un unico descrittore: \textbf{i-node} 
+identificato da un intero \textbf{i-number}. Gli i-node 
+sono salvati in un vettore \textbf{i-list} in cui l'indice 
+è l'i-number. 
+\noindent Ogni file sono associati uno o più nomi.
+
+\subsubsection{Organizzazione fisica}
+\noindent Il metodo di allocazione utilizzato in UNIX è quello 
+a indice. La formattazione del disco avviene in blocchi fisici di 
+dimensione: \textbf{512-4096 Bytes}.
+
+\noindent La superficie del disco File System è partizionata in 4 
+regioni:
+
+\begin{figure}[h!]
+    \begin{center}
+        \includegraphics[width=0.3\linewidth]{img/blocks.png}      
+    \end{center}
+\end{figure}
+
+\begin{itemize}
+    \item \textbf{Boot block}: contiene le procedure di
+    inizializzazione del sistema (da eseguire al 
+    \textbf{bootstrap}).
+    \item \textbf{Super block}: fornisce i limiti delle 4 regioni
+    (quindi il partizionamento), il puntatore a una lista dei
+     blocchi liberi, il puntatore a una lista degli i-node 
+     liberi.
+    \item \textbf{I-list}:contiene i descrittori di \underline{tutti} 
+    i file.
+    \item \textbf{Data block}:  è l'area del disco
+    effettivamente disponibile per la memorizzazione dei file.
+\end{itemize}
+
+\subsubsection{i-node}
+È il descrittore del file. Contiene i seguenti attributi:
+\begin{enumerate}
+    \item Tipo di file: ordinario, direttorio, speciale(dispositivi).
+    \item User-id del proprietario, e group-id
+    \item Dimensione.
+    \item Data.
+    \item 12 bit di protezione.
+    \item Numero di links (più nomi).
+    \item 13-15 indirizzi di blocchi, a seconda della versione.
+\end{enumerate}
+
+\noindent A cosa servono quei 13-15 indirizzi di blocchi? Anche se
+UNIX utilizza l'allocazione a indice, quindi l'allocazione del file
+ non è su blocchi fisicamente contigui, nell'
+i-node sono contenuti puntatori a blocchi (ad esempio 13), dei quali:
+\begin{itemize}
+    \item I primi 10 riferiscono blocchi di dati
+    (indirizzamento diretto)
+    \item 11esimo indirizzo: indirizzo di un blocco indice, contenente
+    a sua volta indirizzi di blocchi dati (\textbf{primo livello di indirettezza}
+    ).
+    \item 12esimo indirizzo: indirizzo di un blocco indice che contiene indirizzi 
+    di blocchi indice \textbf{due livelli di indirettezza}.
+    \item 13esimo indirizzo: indirizzo di un blocco indice che contiene indirizzi 
+    di blocchi indice che contengono indirizzi di altri blocchi indice.\textbf{tre livelli di indirettezza}.
+
+\end{itemize}
+
+\begin{figure}[h!]
+    \begin{center}
+        \includegraphics[width=0.7\linewidth]{img/i_list_node.png}      
+    \end{center}
+\end{figure}
+\noindent ò512 byte un blocco, 32 byte un indirizzo, 128 indirizzi per blocco. 
+5KB accessibili direttamente, 128*512 a \textbf{indirezione singola} = 64KB,
+128*128*512 a \textbf{indirezione doppia} = 8MB, 
+128*128*128*512 a \textbf{indirezione tripla}  = 1GB.
+Più il file aumenta di dimensione più l'accesso risulterà 
+costoso a causa dei livelli di indirettezza.
+
+\subsubsection{Direttorio}
+Anche le directory sono rappresentate nel file system da un 
+file. Il file contiene un insieme di record con la struttura
+\textit{nome relativo: i-number}, uno per ogni file contenuto
+nella directory, con l'aggiunta delle directory \textbf{. e ..} .
+
+\noindent \textbf{N.B.} Ricorda che per eseguire cd su una
+directory servono i diritti di esecuzione sulla directory.
+Quindi in caso di esecuzione di una cd, si apre il file della
+directory corrente e si cerca la directory obiettivo della cd,
+si legge il record e si va a leggere nella i-list il descrittore
+della directory per capire se si hanno i permessi.
+
+\subsubsection{EXT2}
+Il file system EXT2 è stato adottato da Linux nel 1993 al posto 
+di EXT e riesce a gestire da 16GB a 4TB. L'amministratore può decidere la dimensione
+del blocco da 1024 a 4096 bytes e la dimensione dell'i-list.
+Inoltre il sistema prevede la creazione di gruppi i quali includono
+ data blocks e i-node memorizzati in tracce adiacenti
+e una copia delle strutture di controllo (superblock e
+ descrittore filesystem) aumentando di fatto l'affidabilità.
+Così viene garantita la località di inode e relativi file (
+all'interno dello stesso gruppo) e di tutti i blocchi di un 
+file.
+\medskip
+
+\noindent EXT2 è stato sostituito con \textbf{EXT4} il quale aggiunge 
+in un file di log tutte le azioni operate al disco (sistema di
+\textit{journaling}).
+\medskip
+
+\pagebreak
+
+\noindent Linux prevede l'integrazione con filesystem diversi
+ da Ext, grazie al \textbf{Virtual File System} il quale
+ intercetta ogni system call relativa all'accesso al file
+system e, all'occorrenza, provvede al collegamento
+con file system "esterni".
+
+\begin{figure}[h!]
+    \begin{center}
+        \includegraphics[width=0.5\linewidth]{img/vfs.png}      
+    \end{center}
+\end{figure}
+
+\subsubsection{Livello di accesso}
+UNIX utilizza l'\textbf{accesso sequenziale}. Il puntatore 
+al file si chiama \textbf{I/O pointer} e registra la posizione
+corrente. Il record logico è il singolo byte, quindi il file è
+visto come una sequenza di byte.
+
+\noindent In generale ad ogni processo è associata una \textit{tabella dei file 
+aperti} di dimensione limitata (tipicamente 20) presente
+nella \underline{user structure del processo}.
+Ogni elemento della tabella rappresenta
+un file aperto dal processo ed è individuato da un 
+indice intero: \textbf{file descriptor}. Inoltre contiene un 
+puntatore al
+In ogni tabella esistono tre file aperti automaticamente:
+\textbf{0-stdin, 1-stout, 2-stderr}.
+
+\begin{figure}[h!]
+    \begin{center}
+        \includegraphics[width=0.3\linewidth]{img/file_table.png}      
+    \end{center}
+\end{figure}
+
+\noindent Il kernel gestisce altre due strutture dati,
+\underline{globali}, allocate nell'area dati del kernel:
+\begin{itemize}
+    \item La \textbf{tabella dei file}:per ogni file aperto, contiene una
+    copia del suo i-node onde evitare ripetuti accessi al disco.
+    \item la \textbf{tabella dei file aperti di sistema}:
+    ha un elemento per ogni operazione di apertura relativa a file 
+    (aperti e non ancora chiusi); ogni elemento contiene:
+        \begin{itemize}
+            \item l'I/O pointer, che indica la posizione corrente 
+            all'interno del file.
+            \item un puntatore all' i-node del file nella tabella
+             dei file attivi.
+        \end{itemize}
+    \noindent Quindi se due processi aprono separatamente lo
+     stesso file  F, la tabella conterrà due elementi distinti
+     associati a F.
+\end{itemize}
+
+\begin{figure}[h!]
+    \begin{center}
+        \includegraphics[width=0.7\linewidth]{img/file_tables.png}      
+    \end{center}
+\end{figure}
+
+\noindent In caso di fork, il figlio eredita la copia dei file aperti
+e quindi anche il puntatore allo stesso record della tabella 
+dei file aperti. \textit{Padre e figlio condividono lo stesso 
+IO pointer}.
+
+\subsection{System call di accesso a file}
+L'apertura di un file comporta l'inserimento di un elemento
+(individuato da un file descriptor) nella
+prima posizione libera della Tabella dei file aperti
+ del processo,  l'inserimento di un nuovo record nella
+ Tabella dei file aperti di sistema e la copia dell'
+ i-node nella tabella dei  file attivi (se il file non è 
+ già in uso).
+
+\subsubsection{Open}
+\noindent \fbox{%
+\parbox{\textwidth}{%
+    \begin{center}
+        \textbf{int open(char nomefile[],int flag, [int mode]);}
+    \end{center}
+    }%
+} 
+\medskip
+\begin{itemize}
+    \item \textbf{Nomefile} è il nome del file (relativo o assoluto).
+    \item \textbf{Flag} esprime il modo di accesso; ad esempio
+    \textbf{O\_RDONLY}, per accesso in lettura,
+    
+    \textbf{O\_WRONLY}, per accesso in scrittura,
+    \textbf{O\_RDWR} per accesso in scrittura e lettura.
+    \item \textbf{Mode} è un parametro richiesto soltanto se l'apertura determina la
+    creazione del file (flag \textbf{O\_CREAT}): in tal caso, mode specifica i bit di
+    protezione (ad esempio, codifica ottale di 4 cifre).
+    \item Il valore restituito dalla open è il file
+     descriptor associato al file, o -1 in caso di errore
+\end{itemize}
+
+\noindent Se la open ha successo, il file viene aperto nel modo richiesto, e
+l'I/O pointer posizionato sul primo elemento (tranne nel caso
+ di \textbf{O\_APPEND}). Nei flag è possibile abbinare anche O\_CREAT e 
+ \textbf{O\_TRUNC}, per accesso in scrittura: la lunghezza del
+ file viene troncata a 0. L'abbinamento deve essere effettuato
+ con l'operatore \textbf{bitwise OR $|$}.
+
+ \noindent Le modalità di apertura sono definite nella libreria
+ \textbf{$<$fcntl.h$>$}.
+
+ \subsubsection{Creat}
+ \noindent \fbox{%
+ \parbox{\textwidth}{%
+     \begin{center}
+         \textbf{int creat(char nomefile[], [int mode]);}
+     \end{center}
+     }%
+ } 
+ \medskip
+
+ \begin{itemize}
+     \item \textbf{Nomefile} è il nome del file (relativo o 
+     assoluto) da creare.
+     \item  \textbf{Mode} specifica i 12 bit di protezione 
+     per il nuovo file.
+     \item il valore restituito dalla creat è il file descriptor
+     associato al file, o -1 in caso di errore.
+ \end{itemize}
+
+\noindent N.B. Il file creato è sempre aperto in scrittura di default.
+
+\noindent Esempio: \textbf{fd2=creat("f2.new", 0777);} 
+
+\noindent che è del tutto equivalente a
+\textbf{fd2=open("f2.new",O\_WRONLY$|$O\_CREAT, 0777);}
+
+\subsubsection{Close}
+\noindent \fbox{%
+\parbox{\textwidth}{%
+    \begin{center}
+        \textbf{int close(int fd);}
+    \end{center}
+    }%
+} 
+\medskip
+
+\begin{itemize}
+    \item \textbf{Fd} è il file descriptor del file da chiudere.
+    \item Restituisce l'esito della operazione (0, in caso di
+    successo, $<$0 in caso di insuccesso).
+\end{itemize}
+
+\noindent Se la close ha successo il file viene memorizzato sul disco,
+viene eliminato l'elemento di indice fd dalla Tab. dei file
+aperti del processo e Vengono eventualmente eliminati (se non 
+condivisi con altri processi) gli elementi corrispondenti dalla Tab. dei
+file aperti di sistema e dalla tabella dei file attivi.
+
+\subsubsection{Read}
+\noindent \fbox{%
+\parbox{\textwidth}{%
+    \begin{center}
+        \textbf{int read(int fd, char *buf, int n);}
+    \end{center}
+    }%
+} 
+\medskip
+
+\noindent Ogni operazione è \textit{sequenziale, atomica e sincrona}.
+\begin{itemize}
+    \item \textbf{Fd} è il file descriptor del file da leggere.
+    \item \textbf{buf} è l'area in cui trasferire i byte letti.
+    \item \textbf{n} è il numero di caratteri da leggere.
+    \item In caso di successo, restituisce un intero
+    positivo (<=n) che rappresenta il numero di
+    caratteri effettivamente letti. (se n=15 ma il file ne contiene 
+    ancora 9, la read restituisce 9. Questo non significa che la read è
+    fallita). 
+\end{itemize}
+
+\noindent L'IO pointer verrà incrementato di n bytes. Alla fine di ogni
+file è presente il carattere \textbf{eof}.
+
+
+
+\subsubsection{write}
+\noindent \fbox{%
+\parbox{\textwidth}{%
+    \begin{center}
+        \textbf{int write(int fd, char *buf, int n);}
+    \end{center}
+    }%
+} 
+\medskip
+
+\noindent Ogni operazione è \textit{sequenziale, atomica e sincrona}.
+\begin{itemize}
+    \item \textbf{Fd} è il file descriptor del file da scrivere.
+    \item \textbf{buf} è l'area da cui trasferire i byte da scrivere.
+    \item \textbf{n} è il numero di caratteri da scrivere.
+    \item in caso di successo, restituisce un intero positivo
+    uguale a n, che rappresenta il numero di caratteri
+    effettivamente scritti. Se il numero è diverso da n,
+    la write è fallita.
+\end{itemize}
+
+\noindent L'IO pointer verrà incrementato di n bytes. Alla fine di ogni 
+write, l'IO pointer punta sempre alla fine del file eof.
+
+\subsubsection{Lseek}
+\noindent \fbox{%
+\parbox{\textwidth}{%
+    \begin{center}
+        \textbf{int lseek(int fd, int offset, int origine);}
+    \end{center}
+    }%
+} 
+\medskip
+
+\noindent System call atta allo spostamento dell'I/O pointer.
+\begin{itemize}
+    \item \textbf{Fd}: è il file descriptor del file.
+    \item \textbf{Offset}: è lo spostamento in byte rispetto all'origine.
+    \item \textbf{Origine}: \textbf{SEEK\_SET - 0} inizio del file,
+    \textbf{SEEK\_CUR - 1} posizione corrente, \textbf{SEEK\_END - 2}
+     fine del file.  
+    \item In caso di successo restituisce un intero che 
+    rappresenta la nuova posizione dell'I/O pointer.
+\end{itemize}
+
+\noindent N.B. lseek(fd,0,2) restituisce la dimensione in byte del file.
+
+\subsubsection{Unlink}
+\noindent \fbox{%
+\parbox{\textwidth}{%
+    \begin{center}
+        \textbf{int unlink(char* name);}
+    \end{center}
+    }%
+} 
+\medskip
+
+\noindent In generale l'effetto della system call unlink è decrementare
+di 1 il numero di link del file specificato (viene modificato il numero 
+di links nell'i-node); nel caso in cui il numero dei link risulti 0 (cosa che
+accade nella gran parte dei casi), allora il file viene cancellato
+ deallocando tutti i blocchi di quel file nella memoria di
+ massa.
+ 
+ \noindent N.B. il file non deve essere stato necessariamente aperto dal
+ processo. 
+\begin{itemize}
+    \item \textbf{Name}: nome del file.
+    \item  Restituisce 0 se l'operazione è andata a buon fine, altrimenti 
+    restituisce -1.
+\end{itemize}
+
+\subsubsection{Link}
+\noindent \fbox{%
+\parbox{\textwidth}{%
+    \begin{center}
+        \textbf{int link(char* oldname, char* newname);}
+    \end{center}
+    }%
+} 
+\medskip
+
+\noindent Incrementa il numero dei link associato al file
+ (viene modificato il numero di links nell'i-node), aggiorna il 
+ direttorio (aggiunta di un nuovo elemento). È l'operazione 
+ inversa dell'unlink.
+ 
+ \noindent N.B. il file deve esistere già, non crea un file!! 
+ Per quella c'è la creat.
+
+\begin{itemize}
+    \item \textbf{Oldname}: nome del file a cui aggiungere un link.
+    \item \textbf{Newname}: nome da aggiungere al file.
+    \item Ritorna 0 in caso di successo, -1 se fallisce. 
+    Questo accade quando oldname non esiste,
+     newname esiste già oppure oldname e newname 
+     appartengono a file system diversi ( in questo caso 
+     si usano \textbf{softlink} mediante \textbf{symlink}).
+\end{itemize}
+
+\pagebreak
+
+\section{Comunicazione tra processi UNIX}
+\noindent Come visto in precedenza i processi Unix non 
+possono condividere memoria (modello ad ambiente locale),
+l'iterazione tra processi, quindi, può avvenire:
+ mediante le condivisione di file (molto complesso,
+sincronizzazione dei processi), oppure attraverso specifici
+strumenti di \textbf{IPC - Inter Process Communication}
+(pipe, fifo, socket).
+
+\subsection{Pipe}
+È un canale \underline{unidirezionale} (accessibile ad
+un estremo in lettura ed all'altro in scrittura) con \underline{capacità
+limitata} (è in grado di gestire l'accodamento di un numero
+limitato di messaggi, gestiti in modo \underline{FIFO})
+che permette la comunicazione tra processi in \underline{modalità asincrona}.
+La pipe rappresenta un chiaro esempio di \underline{comunicazione 
+indiretta} (Mailbox), in quanto un processo può effettuare 
+la comunicazione senza specificare direttamente il destinatario/mittente.
+
+\noindent NB: la pipe può anche consentire una comunicazione “bidirezionale”
+ tra i processi, ma va rigidamente disciplinata.
+
+\noindent La scelta che è stata fatta è stata di garantire
+una certa omogeneità tra file e pipe, in modo da poter
+utilizzare le stesse syscall. Si accederà quindi alla pipe
+utilizzando la syscall read e write.
+\medskip
+
+\noindent \fbox{%
+\parbox{\textwidth}{%
+    \begin{center}
+        \textbf{int pipe(int fd[2]);}
+    \end{center}
+    }%
+} 
+
+\begin{itemize}
+    \item \textbf{Fd} è un puntatore a un vettore di 2 file 
+    descriptor, che verranno \textit{inizializzati} dalla
+    system call. Dopo l'esecuzione della pipe, fd[0] conterrà
+    il file descriptor dell'estremo di lettura della pipe e
+    fd[1] conterrà il file descriptor dell'estremo di
+    scrittura della pipe.
+    \item  La system call restituisce: un valore negativo
+     in caso di fallimento oppure 0 se ha successo.
+\end{itemize}
+
+\noindent La write e la read
+ da/verso pipe possono essere \underline{sospensive},
+ la sincronizzazione avviene automaticamente: in altre parole
+ se la pipe è vuota, un processo che legge si
+ blocca, viceversa, se la pipe è piena, un processo che scrive
+ si blocca.
+
+ \noindent La grande limitazione è che soltanto i processi
+ appartenenti a una stessa gerarchia (cioè, che hanno un antenato in comune)
+ possono scambiarsi messaggi mediante la pipe. Questo perché se un
+ padre esegue una pipe, solo i suoi discendenti potranno accedere alla
+ perché la tabella dei file attivi di processo è estesa a
+ tutto il gruppo del processo.
+ \medskip
+
+ \noindent \textit{Chiusura della pipe:}
+ ogni processo può chiudere un estremo della pipe con una
+ close (solitamente l'estremo della comunicazione che non usa).
+ Ma un estremo della pipe viene effettivamente chiuso, quando tutti
+ i processi che ne avevano visibilità hanno compiuto una close sui due file.
+ Se un processo tenta una lettura da una pipe vuota in cui
+ lato di scrittura è effettivamente chiuso, la read ritorna 0.
+ Mentre se si tenta una scrittura su una pipe il cui lato di lettura
+ è effettivamente chiuso: la write restituisce -1 e viene inviato 
+ il segnale \textbf{SIGPIPE} al processo.
+ 
+\end{document}
