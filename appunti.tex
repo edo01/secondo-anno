@@ -58,12 +58,12 @@
 \end{figure}
 
 \begin{abstract}
-Appunti di Sistemi Operativi T, anno accademico 2021/22, corso tenuto dalla professoressa Anna Ciampolini.  Il link al corso di 
+\noindent Appunti di Sistemi Operativi T, anno accademico 2021/22, corso tenuto dalla professoressa Anna Ciampolini.  Il link al corso di 
 \href{https://virtuale.unibo.it/course/view.php?id=25878}{virtuale} e alla stanza di \href{https://teams.microsoft.com/l/meetup-join/19%3ameeting_MDJjMWZjMWItMTgyOC00MDRmLTg1Y2EtYzRkNzRmMDE3YWNj%40thread.v2/0?context=%7b%22Tid%22%3a%22e99647dc-1b08-454a-bf8c-699181b389ab%22%2c%22Oid%22%3a%22764d790d-e373-4531-959c-9367a8dc2690%22%7d}{Teams}.
 \end{abstract}
 
-\noindent\section{Introduzione - Il sistema operativo}
-E' un programma, o meglio un insieme di programmi, che agisce da intermediario tra l'utente e l'hardware del PC:
+\section{Introduzione - Il sistema operativo}
+\noindent E' un programma, o meglio un insieme di programmi, che agisce da intermediario tra l'utente e l'hardware del PC:
 \begin{itemize}
 \item[$-$] Fornisce all'utente una visione astratta e semplificata dell'hardware.
 \item[$-$] Gestisce in modo efficace ed efficiente le risorse del sistema.
@@ -959,9 +959,10 @@ seguenti attributi:
     \item Codice, dati globali, stack e heap.
     \item riferimento alla text table
     \item Mantiene la stessa process structure e stack del kernel.
-    Per esempio gli eventuali file aperti, rimangono aperti!! 
     Invece nella user structure non cambia nulla che non si
-    riferisca al codice ( quindi cambia il PC ecc).
+    riferisca al codice ( quindi cambia il PC ecc). 
+    \textbf{Per esempio gli eventuali file aperti,
+    rimangono aperti!!}
     \item l'environment cambia solamente se eseguita execle o exexve.
 \end{enumerate}
 
@@ -2597,5 +2598,66 @@ utilizzando la syscall read e write.
  Mentre se si tenta una scrittura su una pipe il cui lato di lettura
  è effettivamente chiuso: la write restituisce -1 e viene inviato 
  il segnale \textbf{SIGPIPE} al processo.
- 
+\medskip
+
+\noindent La pipe non è persistenze. Non rimane traccia nel filesystem, 
+del canale di comunicazione.
+
+ \subsubsection{Dup}
+ \noindent \fbox{%
+ \parbox{\textwidth}{%
+     \begin{center}
+         \textbf{int dup(int fd);}
+     \end{center}
+     }%
+ } 
+ \medskip 
+
+\noindent L'effetto di una dup è copiare il recordo associato a fd nella tabella dei file aperti 
+nella prima posizione libera nella tabella.
+Restituisce il nuovo file descriptor, oppure -1 in caso di errore.
+La principale funzionalità della dup è poter realizzare la ridirezione di comandi su file e la piping di comandi.
+N.B. senza la dup non si potrebbe creare la piping di comandi 
+
+\begin{lstlisting}[style=CStyle]
+main(int argc, char **argv){ 
+    int pid1, pid2, fd[2],i, status;
+    pipe(fd);
+    pid1=fork();
+    if (!pid1){
+        close(fd[1]);
+        close(0); //chiudo stdin
+        dup(fd[0]); /* ridirigo stdin sulla pipe */
+        close(fd[0]);
+        execlp(argv[2], argv[2],(char *)0);
+        exit(-1);
+        ...
+}
+\end{lstlisting}
+
+\subsection{FIFO}
+Affinché due processi possano comunicare anche se non appartengono allo stesso gruppo,
+Unix offre la \textbf{FIFO}. Questa, a differenza della pipe, è persistente e permette la 
+comunicazione tra più processi non appartenenti alla stessa gerarchia.
+
+\noindent La fifo è \textit{unidirezionale} e del tipo first-in-first-out, è rappresenta da un file 
+nel filesystem e quindi \textit{persistente} ed è quindi garantita omogeneità con le modalità di accesso a file.
+
+\subsubsection{Mkfifo}
+
+\noindent \fbox{%
+\parbox{\textwidth}{%
+    \begin{center}
+        \textbf{int mkfifo(char* pathname, int mode);}
+    \end{center}
+    }%
+} 
+\medskip 
+
+\noindent Permette di creare una file passando il nome del file (\textbf{pathname}) con i relativi permessi(\textbf{mode}).
+Restituisce 0 in caso di successo oppure un valore negativo in caso contrario.
+N.B. una mkfifo crea ma non apre il file!!! Quindi stai attento, dopo aver creato la fifo, ricordati di aprire il file.
+
+\noindent Per eliminare una fifo utilizzare la primitiva unlink.
+
 \end{document}
