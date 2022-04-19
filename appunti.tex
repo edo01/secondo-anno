@@ -72,7 +72,7 @@ Il sistema operativo interfaccia programmi applicativi o di sistema con le risor
 (CPU, memoria centrale, memoria secondaria, connessioni di rete). Inoltre, mappa le risorse hardware in risorse logiche, accessibili attraverso interfacce ben definite (processi, file system, memoria virtuale).
 Un sistema operativo deve avere le seguenti caratteristiche:
 \begin{itemize}
-\item[$-$]Scelta dell’architettura;
+\item[$-$]Scelta dell'architettura;
 \item[$-$]Capacità di condivisione;
 \item[$-$]Efficienza;
 \item[$-$]Estensibilità;
@@ -2524,6 +2524,206 @@ accade nella gran parte dei casi), allora il file viene cancellato
      si usano \textbf{softlink} mediante \textbf{symlink}).
 \end{itemize}
 
+\subsection{Protezione e privilegi}
+\noindent Ogni file è accessibile secondo tre diverse modalità: scrittura, lettura, esecuzione.
+ Il proprietario può concedere o negare il permesso di accedere al file ad altri utenti. Mentre 
+ esiste un utente privilegiato (\textbf{root}) che ha accesso incondizionato ad ogni file del 
+ sistema.
+ 
+ \noindent Ad ogni file sono associati 12 bit di protezione (nell'i-node) di cui:
+\begin{itemize}
+    \item 9 bit (\textbf{rwx}) di lettura (read), scrittura (write) ed esecuzione (execute) per utente
+     proprietario (User), utenti del gruppo (Group) e tutti gli altri utenti (Others) - \textbf{UGO}.
+    \item 3 bit di permessi per file \underline{eseguibili} [\textbf{Set-User-Id(SUID), Set-Group-Id(SGID), Save-Text- 
+    Image(sticky)}]
+\end{itemize}
+
+\noindent Al processo che esegue un file eseguibile è associato dinamicamente uno \textbf{User-Id} (e \textbf{Group-Id})),
+chiamato \textbf{User-ID effettivo}. Di default lo uid è quello che lancia il processo. In questo caso uid effettivo
+coincide con lo \textbf{User-ID reale}.
+
+\noindent Nel caso si voglia cambiare questa impostazione (sempre nel caso di file eseguibili) è possibile settare
+a 1 SUID oppure SGID. 
+Settando SUID è possibile cambiare il valore del uid effettivo in quello del proprietario del file. Lo scopo è quello di 
+assumere gli stessi diritti del proprietario del file. SGID funziona in modo analogo con il gruppo. 
+
+\noindent Save-Text-Image l'immagine del processo rimane in area di swap anche dopo che il processo è
+terminato, in maniera tale da velocizzare un futuro riavvio.
+
+\subsubsection{/etc/passwd}
+Il formato del file /etc/passwd è il seguente: \textit{nomeUtente:hashpasswd:uid:gid:descrizione
+utente: home directory utente:shell da lanciare dopo il login}.
+Tutti gli utenti possono leggere da questo file, ma nessuno può scrivere se non root. 
+Ma allora come si può cambiare la password? Si utilizza il comando passwd. Questo è un chiaro esempio dell'utilità di SUID.
+L'utente quando vuole cambiare la propria password deve "fingere" di avere gli stessi privilegi di root per modificare /etc/passwd.
+\medskip
+
+\noindent [-rw\textbf{s}r-xr-x 1 root root 59640 gen 25 17:26 /usr/bin/passwd] come si può notare passwd ha SUID=1 così da poter
+effettuare quello che è chiamato \textit{cambio di dominio di protezione}: lo uid effettivo non ha lo stesso dominio di quello reale.
+
+\subsubsection{Access}
+
+\noindent \fbox{%
+\parbox{\textwidth}{%
+    \begin{center}
+        \textbf{int access(char* pathname, int amode);}
+    \end{center}
+    }%
+} 
+\medskip
+
+\noindent Verifica, controllando il campo dei permessi dell'i-node,
+ se su un dato file sono concessi i permessi specificati per l'utente con
+l'uid \underline{reale} del file che esegue la primitiva.
+Ritorna un booleano (0 corrisponde a vero), esprime il diritto da verificare e può essere:(sono in codifica ottale) 
+\textit{00 existence (esistenza), 01 execute access (accesso in esecuzione), 02 write access (accesso in scrittura),
+ 04 read access (accesso in lettura).}
+
+ \subsubsection{Stat}
+
+ \noindent \fbox{%
+ \parbox{\textwidth}{%
+     \begin{center}
+         \textbf{int stat(const char *path, struct stat *buf);}
+     \end{center}
+     }%
+ } 
+ \medskip
+ 
+ \noindent Permette di analizzare in modo generale l'i-node di un file. Buff è un puntatore a una struttura di tipo STAT 
+ nella quale vengono restituiti gli attributi del file (definito nell'header file \textbf{$<$sys/stat.h$>$}).
+ In caso di errore restituisce -1.
+ Potrebbe essere definita così:
+
+ \begin{lstlisting}[style=CStyle]
+    struct stat{
+        dev_t st_dev;    /* ID of physical device containingfile */ 
+        ino_t st_ino;    /* i-number*/
+        mode_t st_mode;    /* protection bit and filetype*/
+        nlink_t st_nlink;    /* number of hard links*/ 
+        uid_t st_uid;    /* userID of owner*/ 
+        gid_t st_gid;    /* groupID of owner*/
+        dev_t st_rdev;    /* deviceID (if special file) */ 
+        off_t st_size;    /* total size, in bytes*/ 
+        blksize_t st_blksize; /* block size for the file system */ 
+        blkcnt_t st_blocks; /* number of blocks allocated*/ 
+        time_t st_atime;    /* time of last access*/
+        time_t st_mtime;    /* time of last modification*/
+        time_t st_ctime;    /* time of last status change*/
+    };
+\end{lstlisting}
+
+\noindent Per interpretare il valore di st\_mode, sono disponibili alcune costanti e macro in $<$sys/stat.h$>$.
+
+\noindent Ad esempio:
+\begin{itemize}
+    \item  \textbf{S\_ISREG(mode)} è un file regolare? (flag S\_IFREG)
+    \item \textbf{S\_ISDIR(mode)} è una directory? (flag S\_IFDIR)
+    \item \textbf{S\_ISCHR(mode)} è un dispositivo a caratteri (file speciale)? (flag S\_IFCHR)
+    \item \textbf{S\_ISBLK(mode)} è un dispositivo a blocchi (file speciale)? (flag S\_IFBLK)
+\end{itemize}
+
+
+
+\subsubsection{Chmod e chown}
+
+\noindent \fbox{%
+\parbox{\textwidth}{%
+    \begin{center}
+        \textbf{int chmod (char *pathname, char *newmode);}
+        
+        \textbf{int chown(char *pathname, int owner, int group);}
+    \end{center}
+    }%
+} 
+\medskip
+
+\noindent  N.B. Per chown solamente root può eseguire la syscall.
+
+\subsection{Direttori}
+\noindent Così come per i file, lettura/scrittura di un direttorio può avvenire soltanto dopo l'operazione di apertura.
+Si noti NESSUN processo può scrivere su un direttorio, altrimenti ci sarebbero dei problemi di integrità e di sicurezza del file system. 
+Solo il kernel può modificare un direttorio.
+
+
+\subsubsection{Chdir}
+\noindent \fbox{%
+\parbox{\textwidth}{%
+    \begin{center}
+        \textbf{int chdir (char *nomedir);}
+    \end{center}
+    }%
+} 
+\medskip
+
+\noindent Cambia la directory corrente. Restituisce 0 in caso di successo.Ricorda può fallire se l'utente del processo 
+non ha i diritti di esecuzione su quella directory.
+
+\subsubsection{Opendir}
+
+\noindent \fbox{%
+\parbox{\textwidth}{%
+    \begin{center}
+        \textbf{\#include $<$dirent.h$>$}
+
+        \textbf{DIR *opendir (char *nomedir);}
+    \end{center}
+    }%
+} 
+\medskip
+
+\noindent Permette di aprire una directory. La funzione restituisce un valore di tipo puntatore a DIR. Diverso da NULL se l'apertura ha successo: per gli accessi
+successivi, si impiegherà questo valore per riferire il direttorio. Restituisce NULL invece, in caso di insuccesso.
+(solitamente perché non ho i diritti o perché la directory non esiste).
+
+
+\subsubsection{Readdir}
+
+\noindent \fbox{%
+\parbox{\textwidth}{%
+    \begin{center}
+        \textbf{\#include $<$sys/types.h$>$}
+
+        \textbf{\#include $<$dirent.h$>$ //per il tipo dirent}
+
+        \textbf{struct dirent *descr;}
+
+        \textbf{descr = readdir (DIR *dir);}
+    \end{center}
+    }%
+} 
+\medskip
+
+\noindent Per leggere una directory si passa il valore restituito da opendir. In caso di successo, la readdir legge un elemento 
+dal direttorio dato e restituisce un puntatore di tipo \textbf{dirent}. Se la read non ha successo restituisce NULL.
+
+N.B. d\_namelen è necessaria perché in UNIX i file sono di lunghezza variabile.
+\begin{lstlisting}[style=CStyle]
+struct dirent {
+    long d_ino; /* i-number */
+    off_t d_off; /* offset della prossima entry*/
+    unsigned short d_reclen; /* lunghezza del record */
+    unsigned short d_namelen; /* lunghezza del nome */
+    char *d_name; /* nome del file */
+}    
+\end{lstlisting}
+
+
+
+\subsubsection{Chdir}
+\noindent \fbox{%
+\parbox{\textwidth}{%
+    \begin{center}
+        \textbf{int mkdir (char *nomedir, int mode);}
+    \end{center}
+    }%
+} 
+\medskip
+
+Creazione di una directory con bit di protezione specificati. In caso di successo nel file system comparirà un nuovo file contenente 
+due entry: . e .. .
+
+
 \pagebreak
 
 \section{Comunicazione tra processi UNIX}
@@ -2659,5 +2859,158 @@ Restituisce 0 in caso di successo oppure un valore negativo in caso contrario.
 N.B. una mkfifo crea ma non apre il file!!! Quindi stai attento, dopo aver creato la fifo, ricordati di aprire il file.
 
 \noindent Per eliminare una fifo utilizzare la primitiva unlink.
+
+
+\pagebreak
+
+\section{Multiprogrammazione e gestione della memoria}
+L'obiettivo principale della multiprogrammazione è l'uso efficiente delle risorse computazionali (efficienza nell'uso della
+CPU, velocità di risposta dei processi...) e la necessità di mantenere più processi in memoria centrale, gestendo 
+la memoria in modo da consentire la presenza contemporanea di più processi, garantendo la sicurezza e l'integrità dei dati.
+A livello hardware ogni sistema ha un unico spazio di memoria accessibile direttamente da CPU e dispositivi.
+
+\noindent Compiti del Sistema Operativo sono:
+\begin{itemize}
+    \item \textbf{Accesso alla memoria centrale}: deve svolgere load e store di dati e istruzioni. Gli indirizzi possono essere simbolici 
+    (riferimenti a celle fisiche utilizzati nel codice \textbf{sorgente} mediante nomi simbolici come variabili, funzioni ecc...), logici (riferimenti a celle nello spazio logico di indirizzamento) e 
+    fisici(riferimenti assoluti a livello fisico). Ogni processo dispone di un proprio spazio di indirizzamento logico che viene allocato nella memoria fisica.
+    \medskip
+
+    \begin{figure}[h!]
+        \begin{center}
+            \includegraphics[width=0.20\linewidth]{img/spazio_indirizzamento.png}     
+        \end{center}
+    \end{figure}
+        
+    \noindent N.B. lo \textbf{spazio di indirizzamento logico di un processo} è un intervallo sempre continuo e va da 0 fino ad un massimo P. Nella 
+    memoria centrale invece, l'intervallo avrà un certo offset rispetto alla base della memoria, che potrà variare con il passare del tempo ==$>$ necessità di binding dinamico.
+    In genere, un programma in forma eseguibile contiene riferimenti allo spazio logico di indirizzamento e non agli indirizzi fisici!
+    N.B. gli indirizzi simbolici non vengono risolti tramite il binding degli indirizzi. Associazione simbolo-indirizzo logico viene svolto in fase di compilazione.
+    
+    \begin{figure}[h!]
+        \begin{center}
+            \includegraphics[width=0.7\linewidth]{img/allocazione.png}     
+        \end{center}
+    \end{figure}
+    
+    \item \textbf{Binding degli indirizzi}, ossia l'associazione ad ogni indirizzo logico ad un indirizzo fisico (assoluto). Può essere svolto:
+        \begin{itemize}
+            \item \textbf{Staticamente}, solo se si è a conoscenza dell'allocazione in memoria a priori. A sua volta può essere svolto a tempo di compilazione: il compilatore
+            sostituisce i simboli con gli indirizzi fisici (es. DOS), oppure a tempo di caricamento: in cui il compilatore genera degli
+            indirizzi relativi che saranno poi convertiti dal loader in indirizzi assoluti. Con quest'ultima 
+            \item  \textbf{dinamicamente}, a tempo di esecuzione: in cui un processo può essere spostato da un' area
+            a un'altra durante l'esecuzione. Questo meccanismo viene realizzato con un'infrastruttura hardware dedicata atta a velocizzare l'operazione di binding.
+        \end{itemize}
+
+    \noindent Le fasi di sviluppo possono essere riassunte nel seguente schema. Notare che l'\textit{eseguibile rilocabile} esplicita la libertà del caricatore di allocare
+    in una qualunque zona di memoria.
+    \begin{figure}[h!]
+        \begin{center}
+            \includegraphics[width=0.8\linewidth]{img/sviluppo_programma.png}     
+        \end{center}
+    \end{figure}
+    
+\end{itemize}
+
+\subsection{Allocazione della memoria centrale}
+\noindent Esistono più modi di allocazione della memoria centrale: \textbf{allocazione contigua} (gli indirizzi fisici di un processo sono continui come lo spazio di indirizzamento logico)
+e \textbf{allocazione non contigua}.
+
+\subsubsection{Allocazione contigua a partizione singola}
+Primo approccio molto semplificato: la parte di memoria disponibile per l'allocazione dei processi di utente non è partizionata.
+Questo permette a un solo processo alla volta di risiedere in memoria centrale, non permettendo di fatto la \underline{multiprogrammazione}.
+
+\noindent La memoria viene quindi suddivisa in due aree: una parte bassa solitamente affidata al SO e la parte alta al processo in esecuzione.
+Quale garanzia si ha che il processo risiedente in memoria non acceda alla zona di memoria del SO, illegalmente?
+Viene utilizzato un \textbf{registro di rilocazione} (offset dell'indirizzo logico del processo pari a SO\_MAX+1) che viene sempre sommato all'indirizzo logico, il quale
+deve essere sempre compreso tra 0 e il \textbf{registro limite}.
+
+\begin{figure}[h!]
+    \begin{center}
+        \includegraphics[width=0.7\linewidth]{img/rilocazione.png}     
+    \end{center}
+\end{figure}
+
+\noindent Si introduce il \textbf{MMU - memory management unit}. 
+
+\subsubsection{Allocazione contigua a partizione multipla}
+\noindent Affinché si possa realizzare la multiprogrammazione, si introducono più partizioni, una per processo e indipendenti. 
+\begin{itemize}
+    \item \textbf{Partizioni fisse (MFT, Multiprogramming with Fixed number of Tasks}: La memoria fisica disponibile per lallocazione dei processi è suddivisa a priori
+     in un numero prefissato di partizioni. Così facendo la dimensione di ogni partizione è conosciuta a priori. Quando un processo viene caricato, il SO cerca
+     una partizione libera di dimensione sufficiente ad accogliere il suo spazio di indirizzamento (si sceglie la più piccola con queste caratteristiche per diminuire la 
+     frammentazione interna).
+     
+     \noindent Non sempre è possibile trovare la partizione idonea per un dato processo: si potrebbero verificare dei problemi di sottoutilizzo della memoria - \textbf{frammentazione
+     interna}. Inoltre il \underline{grado di multiprogrammazione} è dato dal numero di partizioni e il processo più grande che posso gestire è dato dalla dimensione della partizione
+     più estesa in memoria.
+
+     \item \textbf{Partizioni variabili (MVT, Multiprogramming with Variable number of Tasks)}: Ogni partizione è creata dinamicamente e dimensionata in base alla dimensione
+     del processo da allocare: quando un processo viene caricato, SO cerca un'area sufficientemente grande per allocarvi dinamicamente la partizione associata (in realtà un po'
+     più grande per lasciare spazio alla processo di espandersi).
+     Elimina la frammentaione interna e il grado di multiprogrammazione è variabile. Inoltre il limite dello spazio di indirizzamento è limitato solamente allo spazio fisico disponibile.
+
+     \noindent Il costo di questa dinamicità è dato dall'overhead introdotto dall'analisi dello spazio disponibile in memoria, che aumenta all'aumentare della grandezza della memoria.
+     Per la gestione di questo overhead esistono più politiche: \textbf{first fit}, viene scelto il primo spazio disponibile per il processo a favore della velocità e della 
+     frammentazione esterna (memoria libera è sempre più frammentata) dovendo ricorrere alla \textbf{compattazione} (corrispettivo della frammentazione).
+\end{itemize}
+
+\noindent Per quanto riguarda la protezione, il discorso è un po' più complicato del caso a partizione singola. Nel caso di partizioni è sempre presente una
+ MMU, in cui per ogni processo esiste una coppia di registri \textbf{registro di rilocazione - $V_{RR}$} e \textbf{registro limite - $V_{RL}$}. Il procedimento è uguale 
+ a quello della partizione singola, ad eccezione dei registri $V_{RR}$ e $V_{RL}$ che vengono cambiati ogni cambio di contesto.   
+ 
+ \begin{figure}[h!]
+    \begin{center}
+        \includegraphics[width=0.8\linewidth]{img/protezione_fissa.png}     
+    \end{center}
+\end{figure}
+
+\subsubsection{Paginazione - allocazione non contigua}
+\noindent L'obiettivo è ridurre la paginazione interna la frammentazione interna e quella esterna. L'idea di base è la suddivisione a priori della memoria fisica in 
+\textbf{frame/pagina fisica} di dimensione fissa, solitamente intorno ai 4 KB, che possa ospitare porzioni di processo. Lo spazio logico del processo sarà anch'esso suddiviso 
+in \textbf{pagine logiche} di dimensione pari alle pagine fisiche. L'associazione pagine logiche pagine fisiche viene poi definita arbitrariamente dal SO.
+
+\noindent Con questa politica elimino completamente la frammentazione esterna. Per allocare un nuovo processo di N pagine logiche, necessito di N pagine fisiche disponibili.
+N.B. La frammentazione interna non è completamente risolta, siccome lo spazio di indirizzamento di un processo potrebbe non essere un multiplo intero del frame. 
+La frammentazione interna è limitata superiormente dal numero di celle contenute all'interno di un frame. Infine è possibile caricare in memoria un sottoinsieme delle pagine 
+logiche di un processo per realizzare la memoria virtuale.
+
+\noindent Per quanto riguarda l'accesso in memoria, in un \textbf{sistema paginato} l'informazione è individuata da due coordinate: la pagina \textit{p} e 
+l'offset \textit{d} relativo all'inizio della pagina. Quindi dati \textit{m} bit per esprimere l'indirizzo: \textit{n} bit saranno utilizzati per esprimere l'offset,
+mentre \textit{m-n} bit verranno utilizzati per esprimere la pagina. Prendiamo il caso classico in un cui m:32 e n:12 m-n:20. Il numero di pagine che posso indirizzare è quindi
+pari a $2^{20}=1MB$, mentre il massimo offset sarà pari a $2^{12}=4KB$.
+Fisicamente l'informazione sarà anch'essa individuata da un offset, identico a quello logico, e da un numero di frame su cui sarà mappato una pagina logica del processo.
+Binding tra indirizzi logici e fisici può essere quindi realizzato mediante una tabella delle pagine associata al processo, su cui sarà salvato il mapping logico-fisico.
+
+\begin{figure}[h!]
+    \begin{center}
+        \includegraphics[width=0.8\linewidth]{img/mapping_paginazione.png}     
+    \end{center}
+\end{figure}
+
+\noindent Come gestire la traduzione indirizzo logico - indirizzo fisico nel modo più veloce possibile? La tabella può essere molto grande
+per processi con spazio di indirizzamento molto ampi. Si potrebbe spostare la tabella delle pagine associate al processo nei registri della 
+CPU, ma questo aumenterebbe l'overhead introdotto dai cambi di contesto e limitando la dimensione massima della tabella.
+Le due principali soluzioni solitamentre adottate sono:
+\begin{enumerate}
+    \item La tabella risiede in memoria centrale e il suo indirizzo di partenza è salvato in un registro \textbf{page table base register - PTBR}.
+     Per ogni accesso necessito di due operazionI, una di traduzione e una di accesso all'informazione.
+    \item Nei sistemii moderni la tabella è parzialmente salvata nella cache. In questa è presente la \textbf{translation look-aside buffers - TLB},
+    una struttura atta a memorizzare parte della tabella delle pagine associate al processo (solitamente prendo le pagine con accesso più frequente).
+    L'accesso è \textit{associativo}, quindi se una pagina è già presente in cache l'accesso è veloce, altrimenti è necessario spostare
+    le pagine target dalla memoria centrale alla cache.
+
+    \noindent La TLB parte quindi vuota, riempiendosi con l'avanzare del processo. La gestione della TLB può esere valutata secondo un indice
+    chiamato \textbf{HIT-RATIO}, che indica la percentuale media di volte in cui una pagina viene trovata in TLB.
+\end{enumerate}
+
+\noindent La tabella delle pagine ha dimensione fissa e può non essere completamente utilizzata. Per capire quali entry della tabella siano
+valide e quali no si possono utilizzare due soluzioni: il \textbf{bit di validità}, 1 se quella pagina è valida 0 se non è valida,
+oppure mantenere all'interno di un registro \textbf{Page Table Length Register} il numero di pagine valide. 
+Queste due soluzioni possono essere adottate contemporaneamente. 
+\medskip
+
+\noindent Inoltre per ogni pagina è possibile esprimere dei bit di protezione, per esempio esprimere il vincolo di \textit{read-only} per
+quanto riguarda le pagine che contengono il codice. 
 
 \end{document}
