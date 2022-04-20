@@ -2951,9 +2951,16 @@ deve essere sempre compreso tra 0 e il \textbf{registro limite}.
      Elimina la frammentaione interna e il grado di multiprogrammazione è variabile. Inoltre il limite dello spazio di indirizzamento è limitato solamente allo spazio fisico disponibile.
 
      \noindent Il costo di questa dinamicità è dato dall'overhead introdotto dall'analisi dello spazio disponibile in memoria, che aumenta all'aumentare della grandezza della memoria.
-     Per la gestione di questo overhead esistono più politiche: \textbf{first fit}, viene scelto il primo spazio disponibile per il processo a favore della velocità e della 
-     frammentazione esterna (memoria libera è sempre più frammentata) dovendo ricorrere alla \textbf{compattazione} (corrispettivo della frammentazione).
-\end{itemize}
+     Per la gestione di questo overhead esistono più politiche: 
+     \begin{enumerate}
+         \item \textbf{First fit}, viene scelto il primo spazio disponibile per il processo a favore della velocità e della 
+         frammentazione esterna (memoria libera è sempre più frammentata) dovendo ricorrere alla \textbf{compattazione} (corrispettivo della frammentazione).
+        \item \textbf{Best fit}, viene scelta la zona di memoria che minimizzi la frammentaione della memoria (zone di memoria libera più
+        piccola).
+        \item \textbf{Worst fit}, viene scelta la zona di memoria che massimizzi la frammentaione della memoria (zone di memoria libera più
+        grande in modo da poter inserire nuovi processi).
+     \end{enumerate}
+     \end{itemize}
 
 \noindent Per quanto riguarda la protezione, il discorso è un po' più complicato del caso a partizione singola. Nel caso di partizioni è sempre presente una
  MMU, in cui per ogni processo esiste una coppia di registri \textbf{registro di rilocazione - $V_{RR}$} e \textbf{registro limite - $V_{RL}$}. Il procedimento è uguale 
@@ -3012,5 +3019,91 @@ Queste due soluzioni possono essere adottate contemporaneamente.
 
 \noindent Inoltre per ogni pagina è possibile esprimere dei bit di protezione, per esempio esprimere il vincolo di \textit{read-only} per
 quanto riguarda le pagine che contengono il codice. 
+
+\subsubsection{Paginazione multilivello}
+\noindent Quando lo spazio logico di indirizzamento di un processo è molto esteso si ha un elevato numero di pagine e la tabella delle
+ pagine del processo assume grandi dimensioni, che per sua natura deve essere allocato in modo contiguo ( generando gli stessi problemi 
+ dell'allocazione contigua). Per risolvere questo problema si può utilizzare la \textbf{paginazione a più livelli}, che 
+ consiste nell'allocazione non contigua anche della tabella delle pagine, ossia si applica la paginazione alla tabella delle pagine.
+ In questo modo è possibile indirizzare spazi logici di dimensioni elevate (N.B. non aumento la capacità di indirizzamento ma cerco di risolvere i problemi
+ dovuti all'allocazione contigua), permettendo di fatto di mantenere in memoria soltanto le
+tabelle interne (secondo livello) che servono e non l'intera tabella.
+
+\noindent Lo svantaggio principale di questa tecnica, è l'aumento del tempo di accesso dovuto all'aumento di indirettezza di accesso
+ alla memoria. L'indirizzo logico passa dall'essere composto dalla pagina p e dall'offset d, ad essere composto dalla terna P1, P2, d:
+ \begin{itemize}
+     \item[$-$] P1 è il primo livello, che è l'indice di accesso alla \textbf{tabella esterna}, la quale cella contiene l'indirizzo 
+     della pagina della tabella delle pagine del processo.
+     \item[$-$] P2 indica invece l'offset della pagina(\textbf{tabella interna}) puntata da P1, la quale cella conterrà il riferimento alla pagina dello spazio
+     di indirizzamento del processo.
+     \item[$-$] d rappresenta l'offset della pagina dello spazio di indirizzamento del processo. 
+ \end{itemize} 
+
+ \noindent Per rappresentare il calcolo si potrebbe pensare di procedere con il seguente calcolo: frame = M[tabellaEsterna[P1]+P2], 
+ valore = M[frame+d].
+
+
+ \begin{figure}[h!]
+    \begin{center}
+        \includegraphics[width=0.8\linewidth]{img/paginazione_multilivello.png}     
+    \end{center}
+\end{figure}
+
+
+ \noindent Per quanto riguarda lo spazio di indirizzamento, è chiaro che aumentando i livelli lo spazio di indirizzamento rimane invariato.
+ Quello che varia è come la memoria della tabella delle pagine viene organizzata. 
+ Prendendo il caso con solamente un livello, con 32 bit di indirizzo, 12 bit sono utilizzati dall'offset, mentre i restanti 20 vengono utilizzati
+ per indicizzare le pagine all'interno dello spazio di indirizzamento. In questo caso la tabella potrebbe arrivare fino ad un massimo 1 MB.
+ Nel caso invece di paginazione a due livelli, è possibile ottenere 1K tabelle di secondo livello a loro volta composta di 1K entry.
+
+ \subsubsection{Tabella delle pagine invertita}
+
+ Per limitare l'occupazione della memoria e diminuire l'overhead introdotto dal cambio di contesto (il contenuto della cache non è più utile e va 
+ sovrascritto) in alcuni SO si usa un'unica struttura dati globale: \textbf{la tabella delle pagine invertita}, la quale contiene un elemento
+ per ogni frame e non per ogni pagina logica.
+ Ogni elemento rappresenta quindi un frame, indice della tabella, e se è allocato contiene: il pid che identifica il 
+ processo a cui è assegnato il frame, il p che identifica il numero di pagina logica e un d che è l'offset all'interno della pagina.
+ Preso un indirizzo logico si cerca nella tabella l'elemento che contiene la coppia (pid,p) e l'indice dell'elemento trovato rappresenta il 
+ numero del frame allocato alla pagina logica p. Il tempo di ricerca è più alto (da un accesso diretto ad un vettore si passa ad un accesso
+ per ricerca) e c'è un problema di condivisione di codice tra processi (\textit{rientranza}) in quanto è difficile associare un frame a
+ più pagine logiche di processi diversi.
+
+ \noindent Il vantaggio maggiormente apprezzabile è la diminuzione dell'overhead.
+
+ \subsubsection{Segmentazione}
+ La segmentazione si basa sul partizionamento dello spazio logico degli indirizzi di un processo in parti(segmenti), caratterizzate da un nome e
+ lunghezza variabile. Essi sono divisi secondo un criterio semantico dello spazio di indirizzamento 
+ (es: codice-dati-stack-heap), ogni segmento viene allocato in memoria in modo contiguo senza un ordine preciso e ad ognuno di essi
+  il SO associa un intero attraverso il quale lo si può riferire. Ad ogni segmento possono essere associati diritti di accesso, per esempio
+  \textit{read-only}.
+  Nella segmentazione ogni indirizzo logico ha una struttura del tipo: \textbf{$<$segmento$-$offset$>$}, dove il segmento è il numero rappresentativo 
+  del segmento nel sistema. Per effettuare il binding tra segmenti e indirizzi fisici, è presente una \textbf{tabella dei segmenti}  che ha una entry
+  per ogni segmento, descritto dalla coppia : \textbf{$<$base(registro STBR)$-$indice(registro STLB)$>$}. La base indica l'indirizzo fisico della prima cella del segmento,
+  mentre il limite indica la dimensione del segmento.
+
+
+ \begin{figure}[h!]
+    \begin{center}
+        \includegraphics[width=0.8\linewidth]{img/segmentazione.png}     
+    \end{center}
+\end{figure}
+
+\noindent La tabella dei segmenti con implementazione globale può avere dimensioni elevate siccome ogni processo necessita di una tabella.
+Questa, in base alle caratteristiche, può essere realizzata su registri di CPU, in memoria centrale oppure su cache.
+\medskip
+
+\noindent La segmentazione è l'evoluzione della tecnica di allocazione a partizioni variabili, la quale prevede solamente un segmento per processo.
+Il problema principale di questa soluzione è la frammentazione esterna, che viene risolta con l'allocazione dei segmenti con
+politiche adatte alla situazione (best fit, worst fit, ..).
+La segmentazione e la paginazione possono essere unite nella \textbf{segmentazione paginata}, in cui lo spazio logico è segmentato e
+ogni segmento è suddiviso in pagine, con questo metodo si elimina la frammentazione esterna e non è necessario mantenere nella cache/memoria l'intero
+segmento, ma basta caricare solo le pagine necessarie. Le strutture presenti nel sistema saranno, per ogni processo, una tabella dei segmenti del processo
+e una tabella delle pagine per ogni segmento.
+Il principale vantaggio introdotto della segmentazione è una maggiore gestione della protezione della memoria e una suddivisione strutturata 
+dello spazio di indirizzamento del codice. 
+
+\noindent Linux utilizza una gestione della memoria basata su segmentazione paginata a tre livelli.
+
+\subsection{Memoria virtuale}
 
 \end{document}
