@@ -20,6 +20,9 @@
 \usepackage{xcolor}
 \usepackage{listings}
 
+%Greek letter
+\usepackage{amssymb}
+
 \definecolor{mGreen}{rgb}{0,0.6,0}
 \definecolor{mGray}{rgb}{0.5,0.5,0.5}
 \definecolor{mPurple}{rgb}{0.58,0,0.82}
@@ -2561,6 +2564,9 @@ L'utente quando vuole cambiare la propria password deve "fingere" di avere gli s
 \noindent [-rw\textbf{s}r-xr-x 1 root root 59640 gen 25 17:26 /usr/bin/passwd] come si può notare passwd ha SUID=1 così da poter
 effettuare quello che è chiamato \textit{cambio di dominio di protezione}: lo uid effettivo non ha lo stesso dominio di quello reale.
 
+\noindent Per provare il campio di uid effettivo e non quello reale esegui in un terminale passwd, poi prova in un altro 
+\textit{ps -eo pid,euid,ruid,command|grep passwd}.
+
 \subsubsection{Access}
 
 \noindent \fbox{%
@@ -3105,5 +3111,239 @@ dello spazio di indirizzamento del codice.
 \noindent Linux utilizza una gestione della memoria basata su segmentazione paginata a tre livelli.
 
 \subsection{Memoria virtuale}
+\noindent La dimensione della memoria può rappresentare un vincolo importante riguardo alla dimensione dei processi e al grado di multiprogrammazione.
+Si può quindi volere un sistema di gestione della memoria che consenta la presenza di più processi in memoria, indipendentemente dalla dimensione dello 
+spazio disponibile e una memoria che svincoli il grado di multiprogrammazione dalla dimensione effettiva della memoria. 
+\subsubsection{Overlay}
+\noindent Mantenere in memoria solamente il codice e i dati che sono necessari al momento, oppure quelli che vengono utilizzati più frequentemente. 
+Sta al programmatore suddividere codice e dati.
+Conoscere il funzionamento del processo per suddividere il codice in più parti da caricare in memoria. Non è una soluzione scalabile, si preferisce un
+metodo gestito interamente dal sistema operativo e non processo-dipendente.
 
-\end{document}
+\subsubsection{Gestione della memoria virtuale}
+\noindent Di solito la memoria virtuale è realizzata mediante tecniche di paginazione su richiesta in cui tutte le pagine di ogni processo risiedono 
+in memoria di massa (\textbf{backing store}) e durante l'esecuzione alcune di esse vengono trasferite all'occorrenza in memoria centrale, è infatti
+presente un modulo del SO chiamato \textbf{pager} che realizza i trasferimenti delle pagine (\textit{swapper di pagine}).
+Esistono alcune implementazioni del pager,ccome il \textbf{pager lazy}. Questo trasferisce in memoria centrale una pagina alla volta, su richiesta. 
+Durante la vita di un processo, può essere necessario lo swap-in del processo. In questo caso è necessaria la presenza di uno swapper affiancato al pager che
+gestisca i trasferimenti di interi processi. Il pager, prima di eseguire lo swap-in di un processo, può stimare le pagine di cui il processo avrà bisogno nella
+fase di caricamento. 
+
+\noindent Si noti che lo swapper lavora ad una frequenza molto minore di quella del pager. Inoltre il lo swapper non fa riferimento al backing store, ma fa riferimento 
+ad un'altra area dedicata.
+\medskip
+
+\noindent Con la memoria virtuale, una pagina dello spazio logico di un processo può quindi essere allocata in memoria centrale o secondaria e lo si distingue dai bit 
+di validità presenti nella tabella delle pagine: il bit settato a zero significa che la pagina è in memoria secondaria oppure è invalida.
+Il processo nel momento della traduzione da indirizzo logico a fisico, consulta la tabella delle pagine del processo. Se il bit di validità della pagina corrispondente 
+vale 0 viene inviato un'interruzione al SO \textbf{page fault}.
+Ricordati che la TP ha dimensione fissa e non tutte le pagine sono valide, per questo il processore deve decidere se la causa dell'interrupt è un accesso illegale oppure
+il dato si trova in memoria di massa.
+
+\noindent Al momento dell'interruzione il processore:
+\begin{enumerate}
+    \item Salvataggio del contesto di esecuzione del processo(resgistri, stato, tabella delle pagine).
+    \item Verifica del motivo del page fault: mediante una tabella interna al kernel si verifica se il
+    processo ha violato i vincoli di protezione con un riferimento illegale terminando il processo, oppure se la pagina è in memoria secondaria (riferimento legale).
+    \item Copia della pagina in un frame libero.
+    \item Aggiornamento della tabella delle pagine.
+    \item Ripristino del processo ed esecuzione dell'istruzione interrotta.
+\end{enumerate}
+
+\noindent In questo modo viene garantita la trasparenza al processo. Questo non sa nulla della memoria virtuale, è il SO che maschera il tutto.
+\medskip
+
+\noindent In seguito a un page fault se è necessario caricare una pagina in memoria centrale potrebbero non esserci frame liberi. In questo caso si utilizza la 
+\textbf{sovrallocazione}: viene sostituita una pagina vittima Pvitt allocata in memoria con la pagina da caricare Pnew. Per prima cosa si individua la Pvitt,
+la si salva su disco, si carica la Pnew nel frame liberato, si aggiornano le tabelle e si riprende il processo. Durante questo procedimento, la sostituzione di una pagina
+ può richiedere 2 trasferimenti da/verso il disco (scaricare la vittima e caricare la pagina nuova).
+ 
+ \noindent E' possibile che la pagina vittima in memoria centrale non sia stata ancora modificata dalla sua copia presente su disco (es: pagine di codice read-only) e in quel
+  caso si può semplicemente cancellare la vittima dalla memoria centrale senza copiarla sul disco, in quanto uguale. Viene così inserito in ogni elemento della tabella delle
+  pagine un bit di modifica (\textbf{dirty bit}). Se è settato a 1 la pagina ha subito almeno un aggiornamento da quando è stata caricata in memoria, se invece è settato a 0
+  significa che la pagina non è stata modificata. L'algoritmo di sostituzione esamina il bit di modifica della vittima ed esegue swap-out della vittima solo se il dirty-bit
+  è settato, altrimenti si limita a cancellarla.
+  
+\subsubsection{Algoritmi di sostituzione}
+\noindent Il fine di ogni algoritmo di sostituzione è di sostituire quelle pagine la cui probabilità di accesso a breve termine è bassa.
+\begin{enumerate}
+    \item \textbf{LFU (Least Frequently Used)}: viene sostituita la pagina che è stata usata meno frequentemente (in un intervallo di tempo
+    prefissato); in questo caso è necessario associare un contatore d'accessi ad ogni pagina. Molti più accessi in memoria, necessita 
+    di un algoritmo di ricerca. \underline{Frequenza di utilizzo}
+    \item \textbf{FIFO} viene sostituita la pagina che è da più tempo caricata in memoria (indipendentemente dal suo uso); in questo caso
+    è necessario memorizzare la cronologia dei caricamenti in memoria (attraverso timestamp). \underline{Cronologia di caricamento}
+    \item \textbf{LRU (Least Recently Used)} viene sostituita la pagina che è stata usata meno recentemente; in questo caso è necessario
+    registrare la sequenza degli accessi alle pagine in memoria. Anche questo si può realizzare con il timestamp, dove l'elemento della tabella
+    delle pagine contiene un campo che rappresenta l'istante dell'ultimo accesso alla pagina (costo di ricerca della pagina vittima) o con uno 
+    stack dove ogni elemento rappresenta una pagina e l'accesso a una pagina provoca lo spostamento dell'elemento corrispondente al top dello
+    stack (verso il fondo stanno quelle accedute meno recentemente). Il pager selezionerà quindi le pagine nella parte più bassa dello stack.
+    Spesso vengono usate versioni semplificate di LRU, inserendo un bit di uso associato alla pagina che al momento del caricamento è
+    inizializzato a 0 e quando la pagina viene acceduta, viene settato. Periodicamente i bit di uso vengono resettati. Verrà sostituita una
+    pagina avente bit di uso uguale a 0. Il criterio potrebbe inoltre considerare il dirty bit: se infatti ci fossero più pagine 
+    non usate di recente (cioè con bit di uso uguale a 0), ne verrebbe scelta una non aggiornata (cioè con dirty bit uguale a 0).
+    \underline{Cronologia di utilizzo}
+\end{enumerate}
+
+
+\subsubsection{Working set}
+
+\noindent Al crescere del numero dei processi e con la saturazione della memoria, si può raggiungere un calo significativo dell'utilizzo
+della CPU per effettuare il paging: il processo impiegherà più tempo per la paginazione che per l'esecuzione: in questo caso si parla di 
+\textbf{trashing}. Per contrastarlo si usano tecniche di gestione della memoria che si basano su \textbf{pre-paginazione}, cioè a differenza del 
+paging-lazy, non si aspetta che la memoria sia satura per intervenire. Si cerca quindi di prevedere il set di pagine di cui il processo
+ da caricare ha bisogno per la prossima fase di esecuzione: il \textbf{working set}. Il working set può essere individuato in base a criteri di 
+ località temporale (la tecnica del working set non lavora con il principio di località spaziale).
+
+
+\begin{figure}[h!]
+    \begin{center}
+        \includegraphics[width=0.5\linewidth]{img/trashing.png}     
+    \end{center}
+\end{figure}
+
+\noindent Un processo in una certa fase di esecuzione usa solo un sottoinsieme relativamente piccolo delle sue pagine logiche, che varia lentamente nel tempo.
+È su questo che si basa la tecnica del working set.
+
+\begin{enumerate}
+    \item \textbf{Località spaziale}: alta probabilità di accedere a locazioni vicine nello spazio logico/virtuale) a locazioni appena accedute.
+    \item \textbf{Località temporale}: alta probabilità di accesso a locazioni accedute di recente.
+\end{enumerate}
+
+\noindent Dato un intero $\Delta$, il working set di un processo P nell'istante t è l'insieme di pagine $\Delta(t)$ indirizzate da P nei più recenti $\Delta$ riferimenti,
+delta definisce la \textbf{finestra} del working set. $\Delta$ caratterizza il working set, esprimendo l'estensione della finestra dei riferimenti. Se $\Delta$ è piccolo il
+ working set è insufficiente a garantire località (alto numero di page fault). Se $\Delta$ è grande: utilizzo di memorio per l'allocazione di pagine non necessarie.
+Ad ogni istante, data la dimensione corrente del working set \textbf{$WSS_i$} di ogni processo $P_i$, si può individuare D=$\sum_{n = 1}^{\infty}WSS_i$ cioè la richiesta del numero 
+totale dei \textbf{frame}. Se m è il numero totale di frame liberi può esserci spazio per l'allocazione di nuovi processi se D$<$m o swapping di uno (o più) processi se D$>$m.
+\medskip
+
+\noindent Il caricamento in memoria di un processo, consiste nel caricamento di un working set iniziale. Il SO mantiene in memoria solamente il working set di ogni processo
+aggiornandolo dinamicamente, in base al principio di località temporale: all'istante t vengono mantenute le pagine usate dal processo nell'ultima finestra $\Delta(t)$.
+Tutte le altre pagine possono essere sostituite.
+
+
+\subsection{Gestione della memoria in UNIX}
+\subsubsection{Versioni iniziali}
+
+\noindent In generale i sistemi operativi si dividono in sistemi che utilizzano working set e sistemi che non lo utilizzano. Ad esempio UNIX non lo utilizza.
+Nelle prime versioni di UNIX, la memoria era puramente segmentata e non era presente memoria virtuale. Così, per ridurre l'overhead introdotto dallo swapper,
+si è ricorso all'utilizzo del codice rientrante (fork). Si è scelta la tecnica di allocazione contigua, con tecnica di \textit{first fit}, sia in memoria centrale 
+che in memoria secondaria. (con tutti i problemi del caso)
+\medskip
+
+\noindent In assenza di memoria virtuale, swapper ricopre un ruolo chiave per la gestione delle contese di memoria da parte dei diversi processi (prime versioni di UNIX).
+Infatti lo swapper periodicamente viene attivato per provvedere eventualmente a swap-in (processi piccoli e processi da più tempo swapped) e swap-out (processi inattivi,
+ processi da più tempo in memoria) di processi. Lo swapper era attivato con una cadenza dell'ordine dei 4 secondi. 
+
+\subsubsection{Nuove versioni}
+\noindent Le maggiori differenze sono l'introduzione della memoria virtuale e la tecnica di allocazione è a segmentazione paginata. L'allocazione di ogni segmento non è
+ più contiguo.
+\medskip
+
+\noindent UNIX non utilizza la tecnica del working set ma utilizza altre tecniche di \textit{pre-paginazione} per evitare il trashing. UNIX carica nei frame liberi della
+ memoria pagine che non sono strettamente necessarie, settando il bit di validità a 0. In caso di page fault se il frame si trova già in memoria basta modificare la tabella 
+ delle pagine (in particolare il bit di validità) e la lista dei frame liberi.
+Lo stato di allocazione dei frame viene mantenuta in una struttura dati interna al kernel che viene consultata in caso di page fault. Questa struttura dati prende il nome
+di \textbf{core map}. Quindi ora uno dei possibili motivi per cui il bit di validità della pagina è uguale a zero può essere il fatto che la pagina è stata
+ pre-caricata(vedi gestione del page fault). 
+
+\noindent Nota che di base il pager è lazy, con l'aggiunta di un sistema di pre-paginazione onde evitare trashing.
+\medskip
+
+\noindent L'algoritmo di sostituzione in caso di sovrallocazione è un \textbf{LRU} modificato, spesso chiamato con il nome di \textbf{algortimo di seconda chance}.
+Ad ogni pagina viene associato un \underline{bit di uso}:
+\begin{enumerate}
+    \item Il bit viene settato a 0 all'inizio del caricamento. Se \underline{acceduta} viene settata a 1.
+    \item Al momento del page fault, il pager setta a 0 tutte le pagine con bit d'uso a 1 (quindi viene resettato). Nel caso in cui una pagina abbia bit d'uso pari a 0,
+    viene spostata in memoria centrale. 
+    \item La pagine vittima viene resa invalida ponendo salvando il frame vittima nella tabella dei frame liberi. Inoltre in caso di presenza del dirty bit, la pagina viene copiata
+    in memoria solo se il dirty bit è settato a 1. In caso invece non sia presente, la pagina viene salvata in memoria di default.
+\end{enumerate}
+
+\noindent L'algoritmo di sostituzione, paging, viene eseguito sempre dal processo \textbf{pagedeamon (pid=2)}.
+\medskip
+
+Altre tecniche per affrontare il trashing si basano sulla definizione di tre costanti: $lotsfree<desfree<minfree$
+\begin{enumerate}
+    \item \textbf{lotsfree}:numero minimo di frame liberi per evitare sostituzione di pagine.
+    \item \textbf{minfree}: numero minimo di frame liberi necessari per evitare swapping dei processi.
+    \item \textbf{desfree}: numero desiderato di frame liberi.
+\end{enumerate}
+
+\noindent l'idea è la stessa di un algoritmo di pre-paginazione: prevenire la saturazione della memoria con anticipo. Mantenendo monitorato il numero di frame liberi, 
+se questo valore raggiunge il valore di lotsfree, il pager si attiva con anticipo evitando quindi il trashing. Il sistema di paging però può andare in sovraccarico se:
+\begin{itemize}
+    \item Il numero di frame liberi è minore di minfree.
+    \item Il numero medio di frame liberi nell'unità di tempo è minore di desfree.
+\end{itemize} 
+\noindent Onde evitare che il pagedeamon monopolizzi la CPU, lo scheduler attiva lo swapper quando il pager è in sovraccarico oppure sta usando la CPU per più del 10$ \% $ del tempo.
+\medskip
+
+\noindent La paginazione nei sistemi GNU/Linux avviene a due o tre livelli in base al processore. I blocchi di codice sono caricati in modo dinamico e i moduli caricati devono essere
+ad allocazione contigua. Nei sistemi GNU/Linux la memoria viene suddivisa in più aree:
+\begin{enumerate}
+    \item \textbf{Area codice kernel}: zona di memoria dedicata al kernel, le pagine di quest'area è detta \textbf{locked} cioè sono esclusi dai normali meccanismi di sostituzione
+    e paginazione.
+    \item \textbf{Kernel cache}: heap del kernel, \textbf{locked}.
+    \item \textbf{Area moduli gestiti dinamicamente}: allocazione mediante algoritmo \textbf{buddy list} (\textit{allocazione contigua dei singoli moduli})
+    \item \textbf{Buffer cache}: gestione I/O su dispositivi a blocchi. Per velocizzare gli accessi in memoria.
+    \item \textbf{Inode cache}: copia degli inode utilizzati recentemente  (vedi tabella file attivi).
+    \item \textbf{Page cache}: pagine non più utilizzate in attesa di sostituzione.
+    \item Processi utenti...
+\end{enumerate}
+
+\noindent Ogni processo può utilizzare fino a 4 GB in memoria: 1GB riservato al kernel e i restanti possono essere utilizzati come spazio di indirizzamento virtuale.
+Lo spazio di indirizzamento di ogni processo può essere suddiviso in un insieme di regioni omogenee e contigue, dov ogni regione è costituita da una sequenza di pagine
+accomunate dalle stesse caratteristiche di protezione e di paginazione.
+
+\subsubsection{MS Windows XP}
+\noindent Il sistema windows gestisce la memoria con il \textbf{clustering delle pagine}: in caso di page fault, viene caricato tutto un gruppo di pagine attorno a quella
+ mancante (page cluster). Ogni processo ha un working set minimo (numero minimo di pagine sicuramente mantenute in memoria) e un working set massimo (massimo numero di
+pagine mantenibile in memoria). Qualora la memoria fisica libera scenda sotto una soglia, SO automaticamente ristabilisce la quota desiderata di frame liberi
+ (\textbf{working set trimming}), eliminando pagine appartenenti a processi che ne hanno in eccesso rispetto a working set minimo. Quindi in parole povere, per ogni processo
+ caricato in memoria, in caso di saturazione della memoria tutti i processi che hanno delle pagine in più rispetto al working set minimo vengono eliminate.
+
+
+\section{Programmazione concorrente nel Modello a Memoria Comune}
+\noindent Se la macchina concorrente è organizzata secondo il modello ad ambiente globale (o modello a memoria comune) il processo viene sostituito con il \textbf{thread}.
+Risorse e dati vengono messe in condivisione e si introduce la necessità di sincronizzare gli accessi alle risorse condivise. Il linguaggio di programmazione concorrente
+ offre costrutti per esprimere la soluzione a problemi di sincronizzazione mentre è il nucleo della macchina concorrente (può essere il SO oppure JVM)
+ che realizza i meccanismi di sincronizzazione.
+\medskip
+
+\noindent Ogni applicazione concorrente può essere rappresentata da un insieme di componenti, suddiviso in due sottoinsiemi disgiunti: componenti \textbf{attivi} (in questo modello
+ i thread) e componenti \textbf{passivi} (le risorse).
+
+\noindent \textbf{Le risorse} Le risorse sono raggruppate in \textbf{classi}. Ogni classe identifica l'insieme di tutte e sole le operazioni che un processo può eseguire per operare 
+su risorse di quella classe. Si dice \textbf{privata di un processo P} se P è il solo processo che può eseguire operazioni sulla risorsa. Invece si dice risorsa
+ \textbf{comune (o globale)} a più processi se è una risorsa su cui più processi possono operare. Con le risorse comuni è necessario garantire il vincolo di
+  \textbf{mutua esclusione}.
+
+
+
+
+ 
+ \end{document}
+
+\section{Bash}
+La shell è un interprete comandi che permette all'utente di eseguire comandi da standart input oppure da file comandi.
+Esistono varie versioni di shell, la più famosa è la bourne shell presente nella maggioranza dei sistemi operativi in /bin/bas.
+\begin{lstlisting}[style=CStyle]
+    loop forever
+    <LOGIN>
+        do{
+            scanf("%s",comando);
+            pid=fork();
+            if (pid==0){ //shell figlio
+                execlp(comando, comando, (char*)0);
+                perror("...");exit(1);
+            }else if(pid>0){ //shell padre
+                if(<comando lanciato in foreground>){
+                    wait(&status); ...
+                }
+
+            }
+        }while(!EOF)
+    <LOGOUT>
+    End loop 
+\end{lstlisting}
+
