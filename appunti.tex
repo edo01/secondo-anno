@@ -47,6 +47,25 @@
     tabsize=2,
     language=C
 }
+\lstdefinestyle{BashStyle}{
+    backgroundcolor=\color{black},   
+    commentstyle=\color{pink},
+    keywordstyle=\color{red},
+    numberstyle=\color{white},
+    stringstyle=\color{white},
+    basicstyle=\color{white},
+    breakatwhitespace=false,         
+    breaklines=true,                 
+    captionpos=b,                    
+    keepspaces=true,                 
+    numbers=left,                    
+    numbersep=5pt,                  
+    showspaces=false,                
+    showstringspaces=false,
+    showtabs=false,                  
+    tabsize=2,
+    language=Bash
+}
 
 \title{Appunti di Sistemi Operativi T}
 \author{Edoardo Carra'}
@@ -3318,11 +3337,249 @@ su risorse di quella classe. Si dice \textbf{privata di un processo P} se P è i
  \textbf{comune (o globale)} a più processi se è una risorsa su cui più processi possono operare. Con le risorse comuni è necessario garantire il vincolo di
   \textbf{mutua esclusione}.
 
+\noindent Data un'operazione I(d), che opera su un dato d comune a più processi, essa si dice \textbf{indivisibile} (o atomica) , se,
+durante la sua esecuzione da parte di un processo P, il dato d non e` accessibile ad altri processi. In pratica gli stati intermedi 
+dell'operazione non sono rilevabili dagli altri processi.
+
+\noindent La sequenza di istruzioni con le quali un processo accede e modifica un insieme di variabili comuni prende il nome di \textbf{sezione critica}.
+Ad un insieme di variabili comuni possono essere associate una sola sezione critica (usata da tutti i processi) o più sezioni critiche 
+(\textbf{classe di sezioni critiche}).
+
+\noindent Sezioni critiche appartenenti alla stessa classe devono escludersi mutuamente nel tempo. Ciò significa Una sola sezione critica di una
+ classe può essere in esecuzione ad ogni istante.
+
+\subsection{Deadlock}
+\noindent Un insieme di processi è in \textbf{deadlock} se ogni processo dell'insieme è in attesa di un evento che può essere causato 
+solo da un altro processo dell'insieme.
+Per descrivere il deadlock, si utilizzano i \underline{grafi di allocazione delle risorse}:
+\begin{itemize}
+    \item[$-$] I processi sono cerchi.
+    \item[$-$] Le risorse sono dei rettangoli.
+    \item[$-$] Se gli archi vanno dal processo alla risorsa, il processo è in attesa della risorsa. Al contrario il processo possiede la risorsa. 
+\end{itemize}
 
 
+\begin{figure}[h!]
+    \begin{center}
+        \includegraphics[width=0.5\linewidth]{img/grafo.png}     
+    \end{center}
+\end{figure}
 
- 
- \end{document}
+\noindent Si noti che un processo va avanti solo se possiede tutte le risorse di cui necessita.
+\medskip
+
+\noindent Le condizioni necessarie e sufficienti affinché si verifichi il deadlock sono:
+\begin{enumerate}
+    \item \textbf{MUTUA ESCLUSIONE}:le risorse sono utilizzate in modo mutuamente esclusivo.
+    \item \textbf{POSSESSO E ATTESA}: ogni processo che possiede una risorsa può richiederne un'altra.
+    \item \textbf{IMPOSSIBILITA' DI PREEMPTION}: una volta assegnata ad un processo, una risorsa non può essere sottratta 
+    al processo (no preemption).
+    \item \textbf{ATTESA CIRCOLARE}: esiste un gruppo di processi {P0, P1, … , PN} in cui P0 attende una risorsa posseduta da 
+    P1, P1 attende una risorsa posseduta da P2, … e PN attende una risorsa posseduta da P0.
+\end{enumerate}
+\noindent Se almeno UNA delle QUATTRO condizioni non è verificata NON C'E' DEADLOCK. 
+Se voglio sviluppare un'applicazione concorrente, devo fare in modo che almeno una delle quattro condizioni non sia verificata.
+
+\noindent Le situazioni di deadlock devono essere evitate o prevenendo il blocco critico oppure rilevandolo:
+\begin{itemize}
+    \item \textbf{PREVENZIONE}: può essere \underline{STATICA} (si impongono dei vincoli a priori che evitano almeno una delle 4 situazioni sopra citate)
+     o \underline{DINAMICA} (prima che un processo P richieda la risorsa R, si controlla se c'è la possibilità di deadlock). 
+    \item \textbf{RILEVAZIONE / RIPRISTINO DEL DEADLOCK}: non c'è prevenzione, ma il S.O. utilizza algoritmi di rilevazione della presenza del
+    deadlock se già in atto e attua un algoritmo di ripristino che può avvenire con la terminazione o con la prelazione del processo. 
+    (Soluzione molto costosa e inefficiente)
+\end{itemize}
+
+\noindent Per quanto riguarda la prevenzione statica è necessario eliminare a livello di progetto, almeno una delle condizioni necessarie 
+affinché si verifichi deadlock.
+
+\begin{enumerate}
+    \item Si utilizzano risorse condivisibili (in certi casi non è possibile e anche in questo caso non elimina il deadlock perché dipende dalla molteplicità della risorsa);
+    \item Si impedisce ad ogni processo di possedere una risorsa mentre ne richiede un'altra; Impedire ad ogni processo di richiedere più di una risorsa alla volta.
+    \item Possibilità di sottrarre la risorsa al processo (in certi casi non è possibile);
+    \item Si stabilisce un rigido ordinamento nell'acquisizione delle risorse da parte di ogni processo. (per esempio un processo non può mai 
+    acquisire una risorsa Ri se è già in possesso di una risorsa Rj con j>i, la soluzione che evita l'attesa circolare è quella in
+    cui i processi che effettuano le acquisizioni delle risorse rispettano lo stesso ordine). (domanda: questa soluzione elimina veramente il deadlock in qualunque caso?)
+\end{enumerate}
+
+\noindent Nota bene questo tipo di prevenzione, non è sempre facile da applicare: bisogna avere un certo controllo sulla struttura del 
+codice, cosa non sempre possibile per esempio nei sistemi distribuiti.
+\medskip
+
+\noindent La prevenzione dinamica invece si basa sulla prevenzione del deadlock in fase di allocazione. Un esempio di algoritmo di prevenzione 
+dinamica potrebbe essere \underline{l'algoritmo del banchiere}.
+\noindent I processi sono i clienti che richiedono risorse, cioè soldi.La banca non può permettere contemporaneamente a tutti i clienti di ottenere 
+il credito massimo: il sistema non potrebbe disporre di risorse a sufficienza. L'obiettivo è quindi l'individuazione di una sequenza di
+ processi \textbf{salva}, tra tutte le possibili sequenze di esecuzione dei processi.
+Def: una sequenza di processi {P0, P1, .. Pn} è salva se per ogni processo Pi le richieste di risorse che Pi può ancora effettuare possono essere soddisfatte
+ con le risorse attualmente libere, più le risorse allocate a tutti i processi Pj (j<i)
+
+\subsection{Soluzioni della mutua esclusione}
+\noindent Il problema della mutua esclusione nasce quando più di un processo alla volta può avere accesso a variabili / risorse comuni. 
+La \underline{regola} di mutua esclusione stabilisce che una sola sezione critica di una classe (insieme di sezioni critiche) può essere 
+in esecuzione ad ogni istante.
+
+Un algoritmo risolve il problema della mutua esclusione se:
+\begin{enumerate}
+    \item Sezioni critiche della stessa classe eseguite in modo esclusivo;
+    \item Quando un processo si trova all'esterno di una sezione critica non può rendere impossibile
+     l'accesso alla stessa sezione ad altri processi;
+    \item Assenza di deadlock
+\end{enumerate}
+
+\noindent Lo schema generale di risoluzione può essere schematizzato in:
+
+\noindent $<PROLOGO>$ SEZIONE CRITICA $<EPILOGO>$
+\begin{enumerate}
+    \item \textbf{PROLOGO}: ogni processo prima di entrare in una sezione critica deve chiedere l'autorizzazione che gli garantiscono
+    l'uso ESCLUSIVO della risorsa, se questa è libera, oppure ne impediscono l'accesso se questa è già occupata.
+    \item \textbf{EPILOGO}: al completamento dell'azione il processo deve eseguire una sequenza di istruzioni per dichiarare 
+    libera la sezione critica.
+\end{enumerate}
+
+In generale è possibile realizzare questo schema risolutivo con l'utilizzo di tre tipi di tecniche:
+\begin{itemize}
+    \item \textbf{Software}:la soluzione non richiede particolari meccanismi di sincronizzazione ma sfrutta solo la possibilità di 
+    condivisione di variabili (es. algoritmo di Dekker). NB sono meccanismi implementati a livello di programmi utente, non viene fatto
+    uso dei meccanismi messi a disposizione dal kernel.
+    \item \textbf{Hardware}: Il supporto è fornito direttamente all'architettura HW: che può essere disabilitare e abilitare gli int.
+    \item \textbf{SO} - Soluzioni basate su strumenti di sincronizzazione: prologo ed epilogo sfruttano strumenti software per la sincronizzazione
+     realizzati dal kernel del sistema operativo. 
+\end{itemize}
+
+\subsubsection{Soluzioni software}
+\noindent Non presuppongono alcun supporto particolare alla sincronizzazione tra i processi né da parte
+del sistema operativo, né da parte dell'HW. Assunzione di base: l'hardware garantisce la
+mutua esclusione solo a livello di lettura e scrittura di una singola parola di memoria.
+
+\noindent Il problema che si presenta spesso nella maggioranza degli algoritmi di risoluzione è la mancata gestione di una possibile 
+pre-emption oppure il mancato rispetto del secondo vincolo: Quando un processo si trova all'esterno di una sezione critica non può rendere 
+impossibile l'accesso alla stessa sezione ad altri processi. Questo avviene se l'esecuzione dei due processi è alternata da un variabile 
+turno la quale sancisce un'alternanza tra le due variabili obbligatoria.
+\medskip
+
+\noindent \textbf{L'algoritmo di Dekker} risolve i problemi elencati. Per due processi richiede tre variabili condivise: 2 flag e una variabile turno. 
+Per ciascun processo esiste esattamente un flag. Un flag impostato (flag = true) segnala che il processo corrispondente potrebbe trovarsi
+ in esecuzione della sezione critica. La variabile turno funziona come una specie di segnalino di turno. La condizione d'ingresso per
+ la iterazione è il flag dell'altro processo: se è impostato, allora l'altro processo si trova in esecuzione della sezione critica, oppure della propria iterazione.
+ in quest'ultimo caso è lo stato di turno che stabilisce l'ulteriore procedere. Se turno contiene il numero dell'altro processo, il flag viene c
+ cancellato e l'esecuzione riprende da principio. In questo modo, l'altro processo ottiene la possibilità di abbandonare l'iterazione 
+ (in caso vi ci si trovava) e di accedere alla sezione critica. Dopo la sezione critica il flag viene cancellato. 
+
+
+ \noindent Nota bene: la variabile turno non sancisce l'alternarsi obbligatorio dei processi, ma viene utilizzata solamente nel caso in cui 
+ entrambi stiano eseguendo la sezione critica! Quindi il secondo vincolo è rispettato.
+
+ \begin{lstlisting}[style=CStyle]
+    /* processo P1: */
+    main(){ 
+        ...
+        busy1=1;
+        while (busy2==1)
+        if (turno==2){ 
+            busy1=0;
+            while(turno!=1);
+            busy1=1;
+        }
+        <sezione critica A>;
+        turno=2;
+        busy1=0;
+        ...
+    }
+    /* processo P2: */
+    main(){ 
+        ...
+        busy2=1;
+        while (busy1==1)
+        if (turno==1){
+            busy2=0;
+            while(turno!=2);
+            busy2=1;
+        }
+        <sezione critica B>;
+        turno=1;
+        busy2=0;
+        ...
+    }
+\end{lstlisting} 
+\medskip
+
+\noindent La soluzione potrebbe risultare complicata da estendere per N processi. Per questo si potrebbe utilizzare
+\textbf{l'algoritmo di Peterson}, sicuramente più compatto dell'algoritmo di Dekker. Il funzionamento è simile a quello di prima.
+Se il processo sta per entrare in una sezione critica imposta un flag e setta turno in modo da andare in stato di wait. Solo che 
+essendo atomica la fase di scrittura di turno, l'ultimo dei due processi che setta turno andà in stato di wait.
+
+\begin{lstlisting}[style=CStyle]
+    /* processo P1: */
+    main(){ 
+        ...
+        busy1=1;
+        turno=2; 
+        while(busy2 && turno==2); 
+        <sezione critica A>;
+        busy1=0;
+        ...
+    }
+
+    /* processo P2: */
+    main(){
+        ...
+        busy2=1;
+        turno=1;
+        while(busy1 && turno==1);
+        <sezione critica B>;
+        busy2=0;
+        ...
+    }
+\end{lstlisting} 
+
+\noindent In queste soluzioni è possibile evidenziare un problema ricorrente: \textbf{l'attesa attiva o busy waiting}. Un processo
+in attesa di poter accedere alla risorsa, consuma tempo di CPU. È possibile quindi aggiungere dei requisiti all'algoritmo che 
+realizza la mutua esclusione:
+Ai requisiti sopra citati aggiungiamo quindi:
+\begin{itemize}
+    \item[4.] Assenza di \underline{starvation}, il processo deve poter accedere a una risorsa in un tempo finito.
+    \item[5.] Eliminare il busy waiting, ossia sospendere l'esecuzione di un processo per tutto il tempo in cui non può
+     avere accesso alla sezione critica.
+\end{itemize}
+
+\subsubsection{Soluzioni hardware}
+\noindent La più semplice soluzione hardware prevede nel disabilitare le interruzioni nell'epilogo e abilitarle nel prologo.
+La soluzione però non è adatta a sistemi con più processori. Inoltre rende insensibile il sistema ad ogni stimolo esterno per tutta
+ la durata di qualunque sezione critica.
+\medskip
+
+\noindent Nella maggior parte dei sistemi, il processore non solo permette di leggere e scrivere in modo atomico, ma permette di eseguire
+un'istruzione atomica di lettura e scrittura contemporanea della memoria: \textbf{test\_and\_set}.
+
+
+\begin{lstlisting}[style=CStyle]
+int test-and-set(int *a){ //passo un indirizzo di memoria
+    int R;
+    R=*a; // leggo l'indirizzo di memoria
+    *a=0; // setto a zero l'indirizzo di memoria
+    return R;
+}
+\end{lstlisting}
+
+
+\noindent Tramite questa istruzione è possibile realizzare un meccanismo hardware-based (lock/unlock) per la soluzione del 
+problema di mutua esclusione. Si prende X una variabile associata ad una classi di sezioni critiche inizializzata al valore uno (1-libera, 0-occupata).
+
+\noindent Definiamo su x le seguenti operazioni \textbf{ATOMICHE}:
+
+\begin{lstlisting}[style=CStyle]
+void lock(int *x){ 
+    while (!test-and-set(x)); // se la risorsa è occupata, quindi x=0, setta di nuovo a zero e non succede nulla, se è libera setta a zero e la occupa
+}
+void unlock(int *x){
+    *x=1;
+}
+\end{lstlisting}
+
+\noindent Si noti che è presente della busy waiting e inoltre è possibile incorrere in starvation, 
+senza un'opportuna gestione delle risorse.
+
+
 
 \section{Bash}
 La shell è un interprete comandi che permette all'utente di eseguire comandi da standart input oppure da file comandi.
@@ -3347,3 +3604,12 @@ Esistono varie versioni di shell, la più famosa è la bourne shell presente nel
     End loop 
 \end{lstlisting}
 
+
+\begin{lstlisting}[style=BashStyle]
+    #!/bin/bash
+
+    
+    
+\end{lstlisting}
+
+\end{document}
