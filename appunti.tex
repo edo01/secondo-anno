@@ -3569,7 +3569,7 @@ problema di mutua esclusione. Si prende X una variabile associata ad una classi 
 
 \begin{lstlisting}[style=CStyle]
 void lock(int *x){ 
-    while (!test-and-set(x)); // se la risorsa è occupata, quindi x=0, setta di nuovo a zero e non succede nulla, se è libera setta a zero e la occupa
+    while (!test-and-set(x)); // se la risorsa e occupata, quindi x=0, setta di nuovo a zero e non succede nulla, se e libera setta a zero e la occupa
 }
 void unlock(int *x){
     *x=1;
@@ -3578,9 +3578,224 @@ void unlock(int *x){
 
 \noindent Si noti che è presente della busy waiting e inoltre è possibile incorrere in starvation, 
 senza un'opportuna gestione delle risorse.
+\pagebreak
+
+\section{JAVA thread}
+\noindent THREAD: \textit{singolo flusso sequenziale di controllo all'interno di un processo}. Condivide \textit{codice, dati e spazio di indirizzamento} con gli altri thread
+associati. Nota però che   \textit{stack e program counter} devono essere privati. Ad ogni programma Java corrisponde l'esecuzione di un task (processo), contenente almeno un
+singolo thread, corrispondente al metodo main() sulla JVM (java virtual machine). (Ricorda che le variabili statiche sono condivise in quanto globali)
 
 
+\begin{figure}[h!]
+    \begin{center}
+        \includegraphics[width=0.5\linewidth]{img/thread_life.png}     
+    \end{center}
+\end{figure}
 
+\noindent Uno thread che viene portato in stato runnable, perché è stato invocato il metodo start per esempio, non sta necessariamente utilizzando tempo di CPU. Esso è 
+in stato di \textit{ready} ed è pronto ad essere schedulato dallo scheduler della JVM. Un thread in esecuzione può essere forzato ad essere deschedulato con il metodo \textbf{yield},
+il quale nelle vecchie versioni di Java veniva utilizzato per perettere l'alternarsi di thread con uguale priorità. Ora yield è deprecato e i meccanismi di alternanza tra thread 
+con ugual priorità sono gestiti a livello di JVM.
+
+\noindent Lo stato not runnable è simile allo stato di wait nei sistemi a memoria locale. Lo stato di dead può essere raggiunto perché un altro thread ha invocato il metodo stop 
+su di lui, oppure per "morte naturale".
+\medskip
+
+\noindent Ogni thread ha un ID assegnato dalla JVM che è ottenibile tramite getName().
+
+\subsection{Sincronizzazione}
+\noindent Ogni tipo di interazione tra thread avviene tramite oggetti comuni:
+\begin{enumerate}
+    \item Interazione di tipo \textbf{competitivo} (mutua esclusione): meccanismo di \textbf{objects locks} e costrutto \textbf{synchronized}.
+    \item Interazione di tipo \textbf{cooperativo}: meccanismo di \textbf{wait-notify} (\underline{semafori}).
+\end{enumerate}
+
+\subsubsection{Mutua esclusione}
+\noindent Ad ogni oggetto viene associato un oggetto \textbf{object lock} che rappresenta lo stato dell'oggetto (libero/occupato). L'associazione del lock ad ogni oggetto
+ viene fatta in modo automatico dalla JVM. I tipi primitivi ovviamente non essendo oggetti devono essere utilizzati attraverso le corrette classi \textit{wrapper} per poter utilizzare
+ i lock.
+
+ \noindent Si dice che ogni oggetto possiede un \textbf{monitor}, cioè un meccanismo di gestione della mutua esclusione che non si limita solamente all'utilizzo del lock.
+ Il monitor, oltre a garantire il rispetto della mutua esclusione sull'oggetto/porzione di codice, permette la gestione per ogni oggetto di un \textbf{entry set}, in cui 
+ i thread posti in stato di wait vengono gestiti attraverso opportune politiche di assegnamento della risorsa dalla JVM. Il lock non garantisce una simile gestione.
+ 
+ \noindent Esiste anche la possibilità di implementare l'interfaccia Lock, la quale però garantisce solamente il vincolo di mutua esclusione senza garantire alcuna sicurezza sulla
+ gestione della coda di wait. (per maggiori informazioni consultare https://www.geeksforgeeks.org/difference-between-lock-and-monitor-in-java-concurrency/)
+ \medskip
+
+\noindent Nella pratica il costrutto synchronized viene sostituito dal compilatore con: \begin{itemize}
+    \item Un prologo che prova ad acquisire la risorsa. Se fallisce il thread viene inserito nel entry set dell'oggetto soggetto della synchronized.
+    \item Un epilogo che tenta di liberare la risorsa: la JVM sceglie il prossimo thread dal entry set da notificare lasciando la risorsa occupata, oppure in caso di 
+    entry set vuoto libera la risorsa. 
+\end{itemize}
+
+\noindent \textbf{NOTA BENE:} Un metodo di una classe synchronized, se invocato, comporta l'entrata del thread nel monitor dell'oggetto! Quindi tutti i thread che vorranno 
+utilizzare metodi synchronized dell'oggetto saranno messi in stato di wait. Questo perché per utilizzare un meotodo synchronized di un oggetto è necessario entrare nel monitor
+dell'oggetto, che è soltanto uno. Tutti gli altri metodi continueranno ad essere richiamabili.
+
+\noindent È bene porre il synchronized sui metodi che cambiano lo stato interno di un oggetto. Ricorda che l'obiettivo primario è serializzare le operazioni.
+\medskip
+
+\noindent Qual è la tipica situazione di utilizzo della notazione a blocco di synchronized? Non sempre è possibile accedere al codice delle classi e non tutte sono state pensate 
+per un utilizzo in ambiente concorrente. Per questo è possibile utilizzare sincronizzarne l'utilizzo con la notazione a blocco.
+
+\noindent Quale tra i due metodi è meglio utilizzare in generale? Implementare runnable oppure estendere Thread? In generale si tende ad estendere Thread solamente nel caso 
+in cui si voglia aggiungere delle funzionalità alla classe Thread, sovrascrivendo altri metodi rispetto a "run". Quindi solitamente si preferisce estendere runnable.
+
+\subsubsection{Semafori}
+\noindent Un semaforo è uno strumento di sincronizzazione che consente di risolvere qualunque problema di sincronizzazione tra thread
+nel modello ad ambiente globale. Generalmente è realizzato dal nucleo del sistema operativo. Un semaforo è un dato astratto rappresentato
+da un intero \underline{NON NEGATIVO} a cui è possibile accedere solo tramite le due operazioni P e V (s è il semaforo):
+\begin{itemize}
+    \item \textbf{P(\&s)}: ritarda il processo fino a che il valore del semaforo diventa maggiore di 0 e quindi decrementa tale valore di 1;
+    (P in olandese sta per decremento, ricordati prelievo)
+    \item \textbf{V(\&s)}: incrementa di 1 il valore del semaforo. (V in olandese sta per incremento)
+\end{itemize}
+
+\noindent Le due operazioni sono implementate in modo \textbf{atomico}, in modo tale che siano sezioni 
+critiche della stessa classe (????)(per creare utilizziamo LOCK / UNLOCK).
+Il valore del semaforo viene modificato da un solo processo alla volta. Se s=0 il semaforo è rosso, mentre se s>0 il semaforo è verde.
+\medskip
+
+\noindent L'attesa dei processi della risorsa non può essere attiva. La soluzione è quella di cambiare lo stato del processo quando la
+ risorsa è occupata. 
+Ad ogni semaforo, inoltre, è associata una coda \textbf{Qs} nella quale sono posti i descrittori dei processi che attendono 
+l'autorizzazione a procedere. La politica della coda deve essere rigorosamente \underline{FIFO} altrimenti è possibile incorrere nella starvation.
+Nella nostra applicazione saranno presenti tante code quante sono i semafori.
+\medskip
+
+\noindent N.B. Quando sospendo un thread nella P perchè la risorsa è occupata, è importante che il processo rilasci la sezione critica 
+di P, altrimenti si può incorrere nel deadlock cioè tutti i processi che vogliono entrare dentro p vengono messi in attesa.
+\begin{lstlisting}[style=CStyle]
+typedef struct{ int value;
+    queue Qs;
+    int lock; // inizializzato a 1
+} semaphore;
+ 
+void p(semaphore *s) {
+    lock(s->lock);
+    if(s->value==0)
+    { 
+        unlock(s->lock); //uscita sez. critica
+        //<sospensione processo in s->Qs>
+        lock(s->lock); //entrata sez. critica
+    }
+    else s->value--;
+    unlock(s->lock);
+    }
+
+void v(semaphore *s) {
+    lock(s->lock);
+    if (<s->Qs non e` vuota>)
+        // <il descrittore del primo processo viene rimosso dalla coda ed il suo
+        // stato modificato in pronto>
+    else s->value++;
+    unlock(s->lock);
+}
+\end{lstlisting}
+
+\noindent Nota che anche se lock e unlock introducono attesa attiva, questa è limitata a pochissime righe di codice perché se nel 
+caso peggiore il processo viene messo in attesa libera subito la sezione critica.
+\medskip
+
+\noindent Quali sono gli utilizzi dei semafori? Uno e la possibilita di sincronizzare due thread (ordine di
+ esecuzione di parti di codice). Questi tipi di messaggi vengono sono di tipo \textbf{"mutua esclusione"}.
+
+\begin{lstlisting}[style=CStyle]
+<codice di p1>
+    ...
+    p(%s)
+    <codice da eseguire dopo>
+    ...
+<fine codice di p1>
+
+<codice di p2>
+    <codice da eseguire prima>
+    v(%s)
+    ...
+<fine codice di p2>
+\end{lstlisting}
+
+\noindent Un altro utilizzo può essere lo scambio di massaggi. Per questo tipo di problemi si può utilizzare un buffer condiviso di
+ una certa capacità N. Per la corretta alternanza di produzione e consumazione del messaggio può essere utilizzata una coppia di semafori. 
+ La soluzione deve poter bloccare il produttore in caso il buffer sia pieno e bloccare il consumatore in caso il buffer sia vuoto.
+
+\noindent L'idea sta nel capire che in questo tipo di problema sono presenti due tipi di risorse: il buffer e i messaggi. 
+Quando il consumatore legge un messaggio, libera il buffer e consuma messaggi. Al contrario il produttore, il quale consuma buffer e
+libera(crea) messaggi. Questo tipo di semafori vengono detti di \textbf{tipo risorsa}.
+
+\begin{lstlisting}[style=CStyle]
+/* Processo produttore:*/
+main()
+{
+    for (;;){
+        <produzione messaggio>;
+        p(&spazio_disp);
+        <deposito messaggio>;
+        v(&msg_disp);
+    }
+}
+
+/* Processo consumatore:*/
+main()
+{
+    for (;;){
+        p(&msg_disp);
+        <prelievo messaggio>;
+        v(&spazio_disp);
+        <consumo messaggio>;
+    }
+}
+\end{lstlisting}
+
+\noindent Attenzione, in caso di più produttori però è necessario garantire ulteriormente la mutua esclusione per quanto riguarda 
+l'accesso al buffer (se due produttori scrivono sullo stesso indice è un problema).
+Questo si può risolvere aggiungendo un mutexP per i produttori e un mutexC per i consumatori(solo se sono più di uno).
+
+\noindent Un altro problema si genera se per esempio nel caso siano presenti N risorse disponibili uguali(per esempio 4 stampanti). 
+Per ogni risorsa del \textbf{pool} associo un semaforo. Il pool di risorse deve essere gestito efficientemente in modo tale che un processo 
+P non sia autonomo nella gestione delle risorse (se due processi chiedono l'accesso alla 1 senza sapere che sia la due che la uno sono libere,
+almeno uno dei due si bloccherà). Si introduce quindi un \textbf{gestore delle risorse} del pool. È lui che amministra in modo efficiente le
+risorse del pool.
+\medskip
+
+\noindent L'idea è che questa entità fornisca due metodi: \begin{enumerate}
+    \item \textit{unsigned int richiesta();} (ottenere, se disponibile, una qualunque risorsa del pool)
+    \item \textit{void rilascio(unsigned int x);} (rilasciare la risorsa assegnata)
+\end{enumerate}
+
+Avrò bisogno di un semaforo per la mutua esclusione del gestore mutex, il quale è a tutti gli effetti una risorsa che permette di aggiornare coerentemente
+lo stato delle risorse. Inoltre sarà presente un altro tipo di semaforo risorsa ris, di cardinalità pari alla risorsa del pool. Inoltre è presente un 
+vettore di booleani che indica quali risorse siano libere e quali no.
+
+\begin{lstlisting}[style=CStyle]
+int Richiesta ()
+{ 
+    unsigned int x, i;
+    p(&ris);
+    p(&mutex);
+    i=0;
+    do
+    i++;
+    while (! Libero[i]);
+    x = i;
+    Libero[i] = 0;
+    v(&mutex);
+    return x;
+}
+
+void Rilascio (unsigned int x)
+{ 
+    unsigned int i;
+    p(&mutex);
+    i=x;
+    Libero[i]= 1;
+    v(&mutex);
+    v(&ris);
+}
+\end{lstlisting}
+
+\pagebreak
 \section{Bash}
 La shell è un interprete comandi che permette all'utente di eseguire comandi da standart input oppure da file comandi.
 Esistono varie versioni di shell, la più famosa è la bourne shell presente nella maggioranza dei sistemi operativi in /bin/bas.
