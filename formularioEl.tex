@@ -1,0 +1,304 @@
+\documentclass{article}
+
+% Language setting
+% Replace `english' with e.g. `spanish' to change the document language
+%\usepackage[italian]{babel}
+\usepackage[utf8]{inputenc}
+
+% Set page size and margins
+% Replace `letterpaper' with `a4paper' for UK/EU standard size
+\usepackage[a4paper,top=2cm,bottom=2cm,left=3cm,right=3cm,marginparwidth=1.75cm]{geometry}
+
+% Useful packages
+\usepackage{amsmath}
+\usepackage{graphicx}
+\usepackage[colorlinks=true, allcolors=blue]{hyperref}
+\usepackage{longtable}
+%images
+\usepackage[rightcaption]{sidecap}
+\usepackage{graphicx}
+%comment
+\usepackage{comment}
+
+\title{Formulario Elettrotecnica T}
+\author{Edoardo Carra'}
+
+
+\begin{document}
+\maketitle
+
+\section{Circuiti elettrici}
+\noindent \underline{Def circuito}: interconnessione di multipoli.
+
+\noindent \underline{Def nodo}: punto di incontro di 2 o più rami.
+
+\noindent \underline{Def nodo funzionale}: punto di interconnessione di almeno 3 bipoli.
+
+\noindent \underline{Def ramo}: composizione di bipolo più morsetto
+
+\noindent \underline{Def lato}: elemento topologico formato dalla serie di componenti connessi a 2 nodi funzionali.
+
+\noindent \underline{Def maglia}: insieme di rami che formano una linea chiusa.
+
+\noindent \underline{Def potenza}: $p(t)=v(t)*i(t)$
+
+\noindent \underline{Def energia}: $\int_{t_1}^{t_2} p(t) \,dx$
+
+\noindent \underline{Def risolvere un circuito}: calcolare tensioni e correnti (to),per ogni lato della rete.
+
+
+\medskip
+\noindent\fbox{%
+    \parbox{\textwidth}{%
+    \begin{center}
+     \textbf{Teorema di Tellegen}: la somma delle potenze generate all'interno di un circuito è pari alla somma delle potenze 
+assorbite. $\sum_{n = 1}^{N_G} P_n  = \sum_{k = 1}^{N_U}  P_k$
+    \end{center}
+    }%
+}
+
+\subsection{Componenti elettrici}
+\noindent \underline{Def componenti passivi}: $E(t) >= 0 \forall t$
+
+\noindent \underline{Def componenti attivi}: $E(t) <= 0 $ per almeno una t
+
+\noindent \underline{Def controllato in tensione}: $i=f(v)$
+
+\noindent \underline{Def controllato in corrente}: $v=g(i)$
+
+\noindent \underline{Def con memoria}: la tensione e la corrente all'istante t dipendono da grandezze al tempo $t_1 < t$
+
+\noindent \underline{Def senza memoria}: la tensione e la corrente all'istante t non dipendono da grandezze al tempo $t_1 < t$
+
+\subsubsection{Resistenza e conduttanza}
+\medskip
+\noindent\fbox{%
+    \parbox{\textwidth}{%
+    \begin{center}
+     \textbf{V=RI V=$\dfrac{I}{G}$}
+
+     $[\Omega]$ e $[\Omega^{-1}]$
+    \end{center}
+    }%
+}
+
+\begin{figure}[h!]
+    \begin{center}
+        \includegraphics[width=0.3\linewidth]{img/Triangolo_Stella.png}
+    \end{center}
+\end{figure}
+\noindent Da stella a triangolo:\begin{itemize}
+    \item $R_A=\dfrac{R_{AB}R_{AC}}{R_{AB}+R_{BC}+R_{CA}} $
+    \item $R_B=\dfrac{R_{BC}R_{AB}}{R_{AB}+R_{BC}+R_{CA}} $
+    \item $R_C=\dfrac{R_{CA}R_{BC}}{R_{AB}+R_{BC}+R_{CA}} $
+\end{itemize}
+
+\noindent Da triangolo a stella:\begin{itemize}
+    \item $R_{AB}=\dfrac{R_{A}R_{B}+R_{B}R_C+R_{C}R_{A}}{R_C} $
+    \item $R_{BC}=\dfrac{R_{A}R_{B}+R_{B}R_C+R_{C}R_{A}}{R_A} $
+    \item $R_{CA}=\dfrac{R_{A}R_{B}+R_{B}R_C+R_{C}R_{A}}{R_B} $
+\end{itemize}
+
+\noindent Nel caso in cui $R_{xy}=R_{\Delta}$ si ha che $R_{\star}=\dfrac{R_{\Delta}}{3}$. Oppure nel caso in cui $R_x$=$R_{\star}$ si ha che 
+$R_{\Delta}=3R_{\star}$
+
+
+\subsubsection{Condensatore}
+\medskip
+\noindent\fbox{%
+    \parbox{\textwidth}{%
+    \begin{center}
+     \textbf{I=C$\dfrac{d v(t)}{d t}$}
+
+     $[F]$
+     \end{center}
+    }%
+}
+\begin{itemize}
+    \item[-] $P(t)=v(t)i(t)=v(t)C\dfrac{d v(t)}{d t}$ può assorbire potenza ma anche erogarla.
+    \item[-] La tensione definisce lo stato energetico: V è una \textbf{variabile di stato} per i componenti capacitativi. $E(t)=\dfrac{CV_2^2}{2} - \dfrac{CV_1^2}{2}$
+    \item[-] Il condensatore può comportarsi come un componente attivo oppure come un componente passivo.
+    \item[-] È un componente con memoria. 
+    \item[-] I condensatori reali si rappresentano con una resistenza in parallelo. (perché non in serie come i generatori?)
+    \item[-] Non sono permesse variazioni istantanee della tensione. 
+\end{itemize}
+
+
+\subsubsection{Induttanza}
+\medskip
+\noindent\fbox{%
+    \parbox{\textwidth}{%
+    \begin{center}
+     \textbf{V=L$\dfrac{d i(t)}{d t}$}
+
+     $[H]$
+     \end{center}
+    }%
+}
+\begin{itemize}
+    \item[-] $P(t)=v(t)i(t)=i(t)L\dfrac{d i(t)}{d t}$ può assorbire potenza ma anche erogarla.
+    \item[-] La corrente definisce lo stato energetico: V è una \textbf{variabile di stato} per i componenti induttivi. 
+    $E(t)=\dfrac{LI_2^2}{2} - \dfrac{LI_1^2}{2}$
+    \item[-] Il condensatore può comportarsi come un componente attivo oppure come un componente passivo.
+    \item[-] È un componente con memoria. 
+    \item[-] Le induttanze reali si rappresentano con un'induttanza in serie.(perché non in parallelo come i generatori?)
+    \item[-] Non sono permesse variazioni istantanee della corrente.
+\end{itemize}
+\pagebreak
+
+\subsubsection{Generatori reali di corrente e di tensione}
+\begin{figure}[h!]
+    \begin{center}
+        \includegraphics[width=0.3\linewidth]{img/generatori_reali.png}
+    \end{center}
+\end{figure}
+
+\medskip
+\noindent\fbox{%
+    \parbox{\textwidth}{%
+    \begin{center}
+     \textbf{Teorema del generatore equivalente}: un generatore di corrente A in parallelo con una resistenza R è equivalente
+     a un generatore di tensione E in serie alla stessa resistenza R, di valore $E=AR$.
+     \end{center}
+    }%
+}
+
+\begin{figure}[h!]
+    \begin{center}
+        \includegraphics[width=0.3\linewidth]{img/teorema_del_generatore.png}
+    \end{center}
+\end{figure}
+
+\noindent Ricorda, due generatori ideali di tensione possono essere messi in serie, ma mai in parallelo. Invece due generatori ideali
+ di corrente non possono mai essere messi in serie. Questo perché altrimenti non sarebbero rispettate LKT e LKC.
+
+
+\subsection{Teorema del massimo trasferimento di potenza}
+
+\subsubsection{Generatori reali di corrente e di tensione}
+\begin{figure}[h!]
+    \begin{center}
+        \includegraphics[width=0.7\linewidth]{img/unione.jpg}
+    \end{center}
+\end{figure}
+
+\noindent Il massimo valore della potenza trasferita dal generatore alla resistenza di carico si ottiene per $R_c=R_l$ 
+per un valore $P_{Lmax}=\dfrac{E^2}{4R}$. Dal grafico si può notare che la potenza tende a 0 per $R_c->\infty$ e per $R_c=0$.
+Nel primo caso il circuito tende a un aperto non facendo circolare corrente nel circuito, mentre nel secondo caso la resistenza
+ tende se $R_c<R_l$ la potenza dissipata su $R_l$ è maggiore di quella dissipata su $R_c$.
+
+\section{Metodi di analisi}
+\subsection{Metodo di Tableau}
+\noindent Si individuano N nodi e L lati. Si imposta un sistema di N-1 LKC e L-N+1 LKT indipendenti (cioè le maglie non si devono
+ intersecare). Il sistema creato sarà composto da 2L equazioni in 2L incognite(2 per ramo).
+\subsection{PSE}
+Le variabili di rete(effetti) si possono ottenere come sovrapposizione delle risposte dovute alle singole cause. Si procede attivando un 
+generatore alla volta, passivando tutti gli altri.
+
+\noindent N.B. non si può applicare il PSE alle potenze, in quanto non si trattano di grandezze lineari.
+
+\subsection{Teorema di Thevenin}
+Se il circuito da semplificare non è accoppiato con il carico è possibile applicare il teorema di Thevenin. 
+Qualunque circuito lineare, indipendentemente dalla sua complessità, visto da due terminali è equivalente ad un generatore reale di tensione
+costituito da un generatore ideale di tensione in serie a un resistore: l'equivalenza vale limitatamente alla tensione e alla corrente
+in corrispondenza dei terminali del circuito.
+
+\noindent $E_{eq}$ è pari alla tensione a vuoto sui morsetti del carico, mentre $Z_{eq}$ è pari all'impedenza equivalente sui terminali del carico.
+
+\subsection{Teorema di Norton}
+Se il circuito da semplificare non è accoppiato con il carico è possibile applicare il teorema di Norton. 
+Qualunque circuito lineare, comunque complesso, visto da due nodi A-B è equivalente ad un generatore reale di corrente costituito
+da un generatore ideale di corrente in parallelo con un resistore: l'equivalenza vale limitatamente alla tensione e alla corrente in 
+corrispondenza dei nodi A-B.
+
+\noindent $A_{eq}$ è pari alla corrente di cortocircuito sui morsetti del carico, mentre $Z_{eq}$ è pari all'impedenza equivalente sui
+terminali del carico.
+
+\subsection{Teorema di Millman}
+Data una rete di 2 o più lati in parallelo, la tensione ai capi della rete è pari al rapporto delle correnti di cortocircuito di ogni singolo lato
+e la sommatoria delle conduttanze di ogni lato.
+
+
+\medskip
+\noindent\fbox{%
+    \parbox{\textwidth}{%
+    \begin{center}
+    $\dfrac{\sum_{k = 1}^{N_{lati}} i_k }{\sum_{j = 1}^{N_{lati}}  \dfrac{1}{R_k} } = \dfrac{\sum_{k = 1}^{N_{tensione}} \dfrac{E_k}{R_k}  + \sum_{y = 1}^{N_{corrente}} I_y }{\sum_{j = 1}^{N_{lati}}  \dfrac{1}{R_k} } $
+    \end{center}
+    }%
+}
+
+\begin{figure}[h!]
+    \begin{center}
+        \includegraphics[width=0.6\linewidth]{img/millman.jpg}
+    \end{center}
+\end{figure}
+\pagebreak
+
+\section{Transitori}
+\noindent Durante il transitorio ci interessiamo delle variazioni delle variabili di stato dei componenti nel tempo. 
+Queste sono particolarmente interessanti perché descrivono il comportamento dell'energia del nostro sistema.
+
+\begin{enumerate}
+    \item \underline{Condensatore}: $E=\dfrac{1}{2}LI^2$
+    \item \underline{Induttore}: $E=\dfrac{1}{2}CV^2$
+\end{enumerate}
+
+\medskip
+\noindent\fbox{%
+    \parbox{\textwidth}{%
+    \begin{center}
+        \textbf{Postulato di continuità dell'energia:} l'energia varia con continuità, perciò le variabili di stato non possono subire delle 
+        discontinuità.
+    \end{center}
+    }%
+}
+\medskip
+
+\subsection{Risoluzione dei circuiti}
+\noindent Le LKT portano alla risoluzione di equazioni differenziali di ordine N, dove N è il numero di componenti dinamici presenti nel 
+nostro sistema. Tutti i circuiti, lineari, trattati in questo corso sono ipoteticamente risolubili con equazioni differenziali ordinarie
+a coefficienti costanti(ODE). Queste insieme alle condizioni iniziali del sistema si riducono ad un unico problema di Cauchy.
+
+\noindent N.B. conoscere lo stato iniziale del sistema significa conoscere lo stato energetico, quindi le variabili di stato prima dell'inizio
+del transitorio.
+
+\medskip
+\noindent\fbox{%
+    \parbox{\textwidth}{%
+    \begin{center}
+        $a_n\dfrac{d^n x(t)}{d t^n}+a_{n-1}\dfrac{d^{n-1} x(t)}{d t^{n-1}} + \dots + a_ox(t)=b(t)$
+    \end{center}
+    }%
+}
+\medskip
+
+\noindent Dove $x(t)$ rappresenta la grandezza incognita, $a_i$ rappresentano i coefficienti costanti e $b(t)$ è il termine noto(generatori ecc...).
+
+\noindent La soluzione del nostro sistema sarà quindi formata dalla somma di due contributi:
+\begin{enumerate}
+    \item La soluzione particolare $p(t)$, che avrà la stessa evoluzione temporale di $b(t)$. (se $b(t)=k$ anche $p(t)=c$)
+    \item La soluzione dell'omogenea associata $o(t)$, la quale rappresenta \textbf{l'evoluzione libera del sistema} con i generatori 
+    passivati. Nella maggior parte dei casi 
+    
+    \noindent $o(t)=k_1e^{\lambda_1t}+k_2e^{\lambda_2t}+\dots+k_ne^{\lambda_nt}$ con $\lambda_1,\lambda_2,\dots,\lambda_n < 0$ per la convergenza
+    per $t->\infty$. Per ogni esponenziale si calcola una costante di tempo $\tau_n=\dfrac{1}{\lambda_n}[s]$, il quale rappresenta la rapidità
+    dell'evoluzione libera del sistema. Più piccolo sarà $\tau$, minore sarà il tempo di transitorio. Il transitorio per convenzione infatti,
+    ha durata pari a $T=5max\{\tau_1,\tau_2,\dots,\tau_n\}$. 
+
+    \noindent N.B. i $\tau_i$ non sono associati ai dispositivi dinamici, ma rappresentano un fenomeno transitorio di interazione tra i componenti 
+    dinamici. (vedi circuito RLC)
+\end{enumerate}
+
+\pagebreak
+
+\subsubsection{Circuito RC}
+
+\begin{figure}[h!]
+    \begin{center}
+        \includegraphics[width=0.5\linewidth]{img/RC.jpg}
+    \end{center}
+\end{figure}
+
+
+\end{document}
