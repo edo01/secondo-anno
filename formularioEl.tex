@@ -293,6 +293,18 @@ del transitorio.
 \pagebreak
 
 \subsubsection{Circuito RC}
+\medskip
+\noindent\fbox{%
+    \parbox{\textwidth}{%
+    \begin{center}
+        $v_C(t)=(V_{C0}-E)e^{-\dfrac{t}{RC}} + E = V_{C0}e^{-\dfrac{t}{RC}} + E(1-e^{-\dfrac{t}{RC}})$
+        \medskip
+
+        $\tau=RC$
+    \end{center}
+    }%
+}
+\medskip
 
 \begin{figure}[h!]
     \begin{center}
@@ -300,5 +312,128 @@ del transitorio.
     \end{center}
 \end{figure}
 
+\begin{itemize}
+    \item[-] $V_{C0}-E)e^{-\dfrac{t}{RC}}$ è detta \underline{risposta transitoria};
+    \item[-] $E$ è detta \underline{risposta a regime}.
+    \item[-] $V_{C0}e^{-\dfrac{t}{RC}}$ è detta \underline{evoluzione libera}, cioè l'evoluzione senza il generatore. Per $t->\infty$ sarà uguale a 0.
+    \item[-] $E(1-e^{-\dfrac{t}{RC}})$ è detta \underline{risposta forzata}, cioè l'evoluzione dettata dal generatore e che si avrebbe
+    nel caso di $V_{C0}=0$. Per $t->\infty$ sarà uguale alla \textit{forzante}.
+    \item[-] $\dfrac{d v(0)}{d t}=\tau$
+\end{itemize}
+
+
+\begin{figure}[h!]
+    \begin{center}
+        \includegraphics[width=0.5\linewidth]{img/RC_graph.png}
+    \end{center}
+\end{figure}
+
+\noindent Per quanto riguarda la corrente è possibile notare la presenza di una discontinuità nel punto t=0. Per questo motivo la corrente non è
+una variabile di stato per il condensatore. $i(t)=0$ per $t<0$, $i(t)=\dfrac{E-V_{C0}}{R}e^{-\dfrac{t}{RC}}$ per $t>0$.
+\pagebreak
+
+\noindent Nel caso reale la presenza di induttanze parassite non permette tale variazione istantanea.
+\begin{figure}[h!]
+    \begin{center}
+        \includegraphics[width=0.7\linewidth]{img/RC_current_graph.png}
+    \end{center}
+\end{figure}
+
+
+\subsubsection{Circuito RL}
+
+\medskip
+\noindent\fbox{%
+    \parbox{\textwidth}{%
+    \begin{center}
+        $i_L(t)=(I_{L0}-\dfrac{E}{R})e^{-\dfrac{Rt}{L}} + \dfrac{E}{R} = I_{L0}e^{-\dfrac{Rt}{L}}+ \dfrac{E}{R}(1-e^{-\dfrac{Rt}{L}})$
+        \medskip
+
+        $\tau=\dfrac{L}{R}$
+    \end{center}
+    }%
+}
+\begin{figure}[h!]
+    \begin{center}
+        \includegraphics[width=0.5\linewidth]{img/RL.png}
+    \end{center}
+\end{figure}
+
+\medskip
+\begin{itemize}
+    \item[-] $(I_{L0}-\dfrac{E}{R})e^{-\dfrac{Rt}{L}}$ è detta \underline{risposta a transitorio};
+    \item[-] $\dfrac{E}{R}$ è detta \underline{risposta a regime}.
+    \item[-] $I_{L0}e^{-\dfrac{Rt}{L}}$ è detta \underline{evoluzione libera}, cioè l'evoluzione senza il generatore. Per $t->\infty$ sarà uguale a 0.
+    \item[-] $\dfrac{E}{R}(1-e^{-\dfrac{Rt}{L}})$ è detta \underline{risposta forzata}, cioè l'evoluzione dettata dal generatore e che si avrebbe
+    nel caso di $V_{C0}=0$. Per $t->\infty$ sarà uguale alla \textit{forzante}.
+    \item[-] $\dfrac{d i(0)}{d t}=\tau$
+    \item[-] $I_{L0}$ è la corrente che circola nella maglia di destra prima del tempo zero. 
+\end{itemize}
+
+\pagebreak
+
+\begin{figure}[h!]
+    \begin{center}
+        \includegraphics[width=0.5\linewidth]{img/RC_graph.png}
+    \end{center}
+\end{figure}
+
+\noindent Per quanto riguarda la tensione è possibile notare la presenza di una discontinuità nel punto t=0. Per questo motivo la tensione non è
+una variabile di stato per l'induttanza. $v(t)=0$ per $t<0$, $v(t)=(E-RI_{L0})e^{-\dfrac{Rt}{L}}$ per $t>0$.
+Nel caso reale la presenza di capacità parassite non permette tale variazione istantanea.
+\begin{figure}[h!]
+    \begin{center}
+        \includegraphics[width=0.7\linewidth]{img/RC_current_graph.png}
+    \end{center}
+\end{figure}
+
+\noindent N.B. Anche se la tensione non è una variabile di stato per l'induttanza, è di fondamentale importanza per l'analisi dei picchi di corrente
+durante il transitorio (alcuni componenti possono essere sottoposti a certo tetto massimo di corrente).
+
+\subsubsection{Confronto tra RL e RC}
+
+\medskip
+\noindent\fbox{%
+    \parbox{\textwidth}{%
+    \begin{center}
+        Per i circuiti RC e RL vale: $\frac{dx(t)}{dt} + \dfrac{x(t)}{\tau} = X_{forzante}$
+\medskip
+
+        con $x(t)=(x_0-x_\infty)e^{-\dfrac{t}{\tau}}+x_\infty$
+    \end{center}
+    }%
+}
+\medskip
+
+\noindent Dove: $x(t)$ è la grandezza incognita, $x_0$ è il valore dell'incognita al tempo $t_0$ e $x_\infty$ è il valore dell'incognita a regime.
+\pagebreak
+
+\subsection{Circuito RLC}
+
+\medskip
+\noindent\fbox{%
+    \parbox{\textwidth}{%
+    \begin{center}
+        $i(t)=Ae^{\lambda_1t}+Be^{\lambda_2t}=\dfrac{E-V_{C0}}{2L\sqrt{\alpha^2-\omega_0^2}}(e^{\sqrt{\alpha^2-\omega^2}t}-e^{-\sqrt{\alpha^2-\omega^2}t})e^{-\alpha t}$
+        \medskip
+
+        $\alpha=\dfrac{R}{2L}$
+        \medskip
+
+        $\omega_0^2=\dfrac{1}{LC}$
+        \medskip
+
+        $\Delta=\alpha^2-\omega_0^2$
+    \end{center}
+    }%
+}
+
+\begin{figure}[h!]
+    \begin{center}
+        \includegraphics[width=0.5\linewidth]{img/RLC.png}
+    \end{center}
+\end{figure}
+
+\subsubsection{$\Delta=0$ risposta sovrasmorzata}
 
 \end{document}
