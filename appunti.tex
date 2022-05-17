@@ -3666,6 +3666,10 @@ Nella nostra applicazione saranno presenti tante code quante sono i semafori.
 
 \noindent N.B. Quando sospendo un thread nella P perchè la risorsa è occupata, è importante che il processo rilasci la sezione critica 
 di P, altrimenti si può incorrere nel deadlock cioè tutti i processi che vogliono entrare dentro p vengono messi in attesa.
+
+\noindent In generale è buona norma rilasciare la sezione critica prima che un thread venga messo in sospeso, onde evitare una situazione
+di deadlock.
+
 \begin{lstlisting}[style=CStyle]
 typedef struct{ int value;
     queue Qs;
@@ -3701,6 +3705,9 @@ caso peggiore il processo viene messo in attesa libera subito la sezione critica
 \noindent Quali sono gli utilizzi dei semafori? Uno e la possibilita di sincronizzare due thread (ordine di
  esecuzione di parti di codice). Questi tipi di messaggi vengono sono di tipo \textbf{"mutua esclusione"}.
 
+\noindent Il dubbio sorge spontaneo: qual è la differenza tra i blocchi/metodi synchronized e i semafori mutex? di base risolvono 
+lo stesso tipo di problema, però mentre synchronized blocca tutti i metodi/blocchi dello stesso monitor, i semafori possono essere differenziati.
+
 \begin{lstlisting}[style=CStyle]
 <codice di p1>
     ...
@@ -3723,6 +3730,10 @@ caso peggiore il processo viene messo in attesa libera subito la sezione critica
 \noindent L'idea sta nel capire che in questo tipo di problema sono presenti due tipi di risorse: il buffer e i messaggi. 
 Quando il consumatore legge un messaggio, libera il buffer e consuma messaggi. Al contrario il produttore, il quale consuma buffer e
 libera(crea) messaggi. Questo tipo di semafori vengono detti di \textbf{tipo risorsa}.
+
+\noindent In generale in questo tipo di problemi si procede individuando quali sono le risorse in gioco e si associano ad essi N semafori di
+ tipo risorsa di cardinalità $C_i$. Per ogni entità runnable poi, si stabilisce la relazione tra l'entità $E_i$ e la risorsa $R_i$: produce o
+ utilizza?
 
 \begin{lstlisting}[style=CStyle]
 /* Processo produttore:*/
@@ -3764,7 +3775,7 @@ risorse del pool.
     \item \textit{void rilascio(unsigned int x);} (rilasciare la risorsa assegnata)
 \end{enumerate}
 
-Avrò bisogno di un semaforo per la mutua esclusione del gestore mutex, il quale è a tutti gli effetti una risorsa che permette di aggiornare coerentemente
+\noindent Avrò bisogno di un semaforo per la mutua esclusione del gestore mutex, il quale è a tutti gli effetti una risorsa che permette di aggiornare coerentemente
 lo stato delle risorse. Inoltre sarà presente un altro tipo di semaforo risorsa ris, di cardinalità pari alla risorsa del pool. Inoltre è presente un 
 vettore di booleani che indica quali risorse siano libere e quali no.
 
@@ -3794,6 +3805,61 @@ void Rilascio (unsigned int x)
     v(&ris);
 }
 \end{lstlisting}
+
+\subsubsection{Monitor}
+\noindent E' un costrutto sintattico che associa un insieme di operazioni (\textbf{entry}) ad una struttura dati comune a più processi,
+tale che le operazioni entry siano le sole operazioni permesse su quella struttura e siano mutuamente esclusive (sono le uniche operazioni
+ che consentono di modificare le variabili locali). Possono essere definite anche delle operazioni non entry, ma che non sono accessibili
+ dall'esterno.Scopo del monitor è controllare l'accesso alla risorsa da parte processi concorrenti, in accordo a determinate
+ politiche. Le variabili locali definiscono lo stato della risorsa associata al monitor. L'idea è che le variabili locali definiscano 
+ lo stato della risorsa nel corso dell'esecuzione delle operazioni entry.
+
+ \begin{figure}[h!]
+    \begin{center}
+        \includegraphics[width=0.4\linewidth]{img/monitorEntry.png}     
+    \end{center}
+\end{figure}
+
+\noindent L'accesso avviene mediante \underline{due livelli di sincronizzazione}:
+\begin{enumerate}
+    \item Il primo garantisce che solo un processo alla volta possa aver acceso alle variabili comuni del monitor 
+    (realizzato direttamente dal linguaggio e dai metodi entry del monitor). I thread sospesi in attesa di \textit{entrare nel monitor},
+    vengono salvati in una coda associata al monitor chiamata \textbf{entry queue}.
+    \item Il secondo controlla l'ordine con il quale i processi hanno accesso alla risorsa in base ad una condizione 
+    di sincronizzazione. Questa viene realizzata dal programmatore secondo una determinata politica di accesso alla risorsa.
+\end{enumerate}
+
+\noindent Il secondo livello si può realizzare attarverso le variabili \textbf{conditions}. Su questo tipo di variabili 
+sono definite due operazioni:
+\begin{itemize}
+    \item[-] \textbf{wait(condVar)}: sospende \underline{sempre} il processo introducendolo nella coda individuata dalla variabile
+    \textit{condVar}, liberando automaticamente il monitor. Il risveglio, causato sempre da una signal sulla stessa variabile condizione,
+    comporta la riacquisizione del monitor da parte del thread e la ripresa della normale esecuzione del programma.
+    \item[-] \textbf{signal(condVar)}: riattiva un processo in attesa nella coda individuata dalla variabile cond. A differenza della
+     \textit{release}, la signal \underline{non è} mai sospensiva
+\end{itemize}
+
+\noindent Per la gestione della signal, esistono due strategie fondamentali (il thread Q risveglia con una signal il processo P):
+\begin{enumerate}
+    \item \textbf{SIGNAL\_AND\_WAIT}: il processo P riprende immediatamente l'esecuzione prendendo il posto di Q nel possesso del monitor,
+    e il processo Q viene sospeso e inserito nella entry queue;
+    \item \textbf{SIGNAL\_AND\_CONTINE}: il processo Q prosegue la sua esecuzione mantenendo l'accesso esclusivo al monitor, 
+    dopo aver risvegliato il processo P, il quale verrà inserito nella entry queue. N.B. a differenza della soluzione 
+    signal\_and\_wait P deve comunque ritestare le condizioni di sincronizzazione prima di rientrare nel monitor.(nella pratica va inserito un ciclo) 
+    Questo perchè prima di P, altri thread possono accedere al monitor cambiando nuovamente lo stato della risorsa.
+
+    \noindent Java adotta questa strategia.
+\end{enumerate}
+
+\begin{figure}[h!]
+    \begin{center}
+        \includegraphics[width=0.7\linewidth]{img/signal_and_wait.png}     
+    \end{center}
+\end{figure}
+
+\noindent E' anche possibile risvegliare tutti i processi sospesi sulla variabile condizione utilizzando la 
+\textbf{SIGNAL\_ALL} (variante della signal\_and\_continue). Ovviamente tutti i processi risvegliati verranno inseriti nella entry queue
+del monitor prima di poter proseguire con l'esecuzione.
 
 \pagebreak
 \section{Bash}

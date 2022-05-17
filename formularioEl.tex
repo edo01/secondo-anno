@@ -58,17 +58,18 @@ assorbite. $\sum_{n = 1}^{N_G} P_n  = \sum_{k = 1}^{N_U}  P_k$
 }
 
 \subsection{Componenti elettrici}
-\noindent \underline{Def componenti passivi}: $E(t) >= 0 \forall t$
+\noindent \underline{Def componenti passivi}: $E(t) >= 0$  $\forall t$, ciò significa che il bilancio energetico complessivo deve essere positivo.
+Cioè il componente ha assorbito più di quello che ha erogato.
 
-\noindent \underline{Def componenti attivi}: $E(t) <= 0 $ per almeno una t
+\noindent \underline{Def componenti attivi}: se $E(t) <= 0 $ significa che il componente ha assorbito meno di quello che ha erogato.
 
 \noindent \underline{Def controllato in tensione}: $i=f(v)$
 
 \noindent \underline{Def controllato in corrente}: $v=g(i)$
 
-\noindent \underline{Def con memoria}: la tensione e la corrente all'istante t dipendono da grandezze al tempo $t_1 < t$
+\noindent \underline{Def con memoria(dinamico)}: la tensione e la corrente all'istante t dipendono da grandezze al tempo $t_1 < t$
 
-\noindent \underline{Def senza memoria}: la tensione e la corrente all'istante t non dipendono da grandezze al tempo $t_1 < t$
+\noindent \underline{Def senza memoria(adinamico)}: la tensione e la corrente all'istante t non dipendono da grandezze al tempo $t_1 < t$
 
 \subsubsection{Resistenza e conduttanza}
 \medskip
@@ -87,13 +88,13 @@ assorbite. $\sum_{n = 1}^{N_G} P_n  = \sum_{k = 1}^{N_U}  P_k$
         \includegraphics[width=0.3\linewidth]{img/Triangolo_Stella.png}
     \end{center}
 \end{figure}
-\noindent Da stella a triangolo:\begin{itemize}
+\noindent Da triangolo a stella:\begin{itemize}
     \item $R_A=\dfrac{R_{AB}R_{AC}}{R_{AB}+R_{BC}+R_{CA}} $
     \item $R_B=\dfrac{R_{BC}R_{AB}}{R_{AB}+R_{BC}+R_{CA}} $
     \item $R_C=\dfrac{R_{CA}R_{BC}}{R_{AB}+R_{BC}+R_{CA}} $
 \end{itemize}
 
-\noindent Da triangolo a stella:\begin{itemize}
+\noindent Da stella a triangolo:\begin{itemize}
     \item $R_{AB}=\dfrac{R_{A}R_{B}+R_{B}R_C+R_{C}R_{A}}{R_C} $
     \item $R_{BC}=\dfrac{R_{A}R_{B}+R_{B}R_C+R_{C}R_{A}}{R_A} $
     \item $R_{CA}=\dfrac{R_{A}R_{B}+R_{B}R_C+R_{C}R_{A}}{R_B} $
@@ -144,7 +145,6 @@ $R_{\Delta}=3R_{\star}$
     \item[-] Le induttanze reali si rappresentano con un'induttanza in serie.(perché non in parallelo come i generatori?)
     \item[-] Non sono permesse variazioni istantanee della corrente.
 \end{itemize}
-\pagebreak
 
 \subsubsection{Generatori reali di corrente e di tensione}
 \begin{figure}[h!]
@@ -158,7 +158,7 @@ $R_{\Delta}=3R_{\star}$
     \parbox{\textwidth}{%
     \begin{center}
      \textbf{Teorema del generatore equivalente}: un generatore di corrente A in parallelo con una resistenza R è equivalente
-     a un generatore di tensione E in serie alla stessa resistenza R, di valore $E=AR$.
+     a un generatore di tensione E in serie alla stessa resistenza R, di valore $E=AR$. (Si dimostra con Thevenin/Norton)
      \end{center}
     }%
 }
@@ -216,7 +216,7 @@ terminali del carico.
 
 \subsection{Teorema di Millman}
 Data una rete di 2 o più lati in parallelo, la tensione ai capi della rete è pari al rapporto delle correnti di cortocircuito di ogni singolo lato
-e la sommatoria delle conduttanze di ogni lato.
+(stacco il lato e lo cortocircuito) e la sommatoria delle conduttanze di ogni lato \underline{passivato}.
 
 
 \medskip
@@ -319,6 +319,8 @@ del transitorio.
     \item[-] $E(1-e^{-\dfrac{t}{RC}})$ è detta \underline{risposta forzata}, cioè l'evoluzione dettata dal generatore e che si avrebbe
     nel caso di $V_{C0}=0$. Per $t->\infty$ sarà uguale alla \textit{forzante}.
     \item[-] $\dfrac{d v(0)}{d t}=\tau$
+    \item[-] $\tau=RC$ perché maggiore è la capacità, maggiore sarà il tempo utilizzato dal condensatore per caricarsi. Inoltre maggiore 
+    è la resistenza, minore sarà la corrente e quindi ci impiegherà più tempo per caricarsi.
 \end{itemize}
 
 
@@ -367,7 +369,7 @@ una variabile di stato per il condensatore. $i(t)=0$ per $t<0$, $i(t)=\dfrac{E-V
     \item[-] $\dfrac{E}{R}(1-e^{-\dfrac{Rt}{L}})$ è detta \underline{risposta forzata}, cioè l'evoluzione dettata dal generatore e che si avrebbe
     nel caso di $V_{C0}=0$. Per $t->\infty$ sarà uguale alla \textit{forzante}.
     \item[-] $\dfrac{d i(0)}{d t}=\tau$
-    \item[-] $I_{L0}$ è la corrente che circola nella maglia di destra prima del tempo zero. 
+    \item[-] $I_{L0}$ è la corrente che circola nella maglia di destra prima del tempo zero.
 \end{itemize}
 
 \pagebreak
@@ -405,25 +407,33 @@ durante il transitorio (alcuni componenti possono essere sottoposti a certo tett
 }
 \medskip
 
-\noindent Dove: $x(t)$ è la grandezza incognita, $x_0$ è il valore dell'incognita al tempo $t_0$ e $x_\infty$ è il valore dell'incognita a regime.
+\noindent Dove: $x(t)$ è la grandezza incognita, $x_0$ è il valore dell'incognita al tempo $t_0$ e $x_\infty$ è il valore
+dell'incognita a regime. In generale, per risolvere un circuito del primo ordine, si può procedere nel seguente modo:
+
+\begin{enumerate}
+    \item Ricavare $x(0^-)$:sostituire i condensatori con un aperto e gli induttori con un corto. Per postulato di continuità dell'energia
+     $v_{C}(0^-)=v_{C}(0^+)$ e $i_{L}(0^-)=i_{L}(0^+)$.
+    \item Ricavare $x(\infty)$: Sostituire i condensatori e gli induttori con un aperto oppure con un corto.
+    \item Determinare la resistenza equivalente $R_{eq}$ ”vista” dal condensatore induttore passivando i generatori di tensione e di corrente.
+\end{enumerate}
+
 \pagebreak
 
 \subsection{Circuito RLC}
-
 \medskip
 \noindent\fbox{%
     \parbox{\textwidth}{%
     \begin{center}
-        $i(t)=Ae^{\lambda_1t}+Be^{\lambda_2t}=\dfrac{E-V_{C0}}{2L\sqrt{\alpha^2-\omega_0^2}}(e^{\sqrt{\alpha^2-\omega^2}t}-e^{-\sqrt{\alpha^2-\omega^2}t})e^{-\alpha t}$
+        $i(t)=Ae^{\lambda_1t}+Be^{\lambda_2t}$
         \medskip
 
-        $\alpha=\dfrac{R}{2L}$
+        $\alpha=\dfrac{R}{2L}$ coefficiente di smorzamento. Determina la velocità con cui la corrente tende a zero.
         \medskip
 
-        $\omega_0^2=\dfrac{1}{LC}$
+        $\omega_0^2=\dfrac{1}{LC}$ pulsazione di risonanza.
         \medskip
 
-        $\Delta=\alpha^2-\omega_0^2$
+        $\Delta=\alpha^2-\omega_0^2$ 
     \end{center}
     }%
 }
@@ -434,6 +444,86 @@ durante il transitorio (alcuni componenti possono essere sottoposti a certo tett
     \end{center}
 \end{figure}
 
-\subsubsection{$\Delta=0$ risposta sovrasmorzata}
+\subsubsection{$\Delta>0$ risposta sovrasmorzata}
+
+\medskip
+\noindent\fbox{%
+    \parbox{\textwidth}{%
+    \begin{center}
+        $i(t)=\dfrac{E-V_{C0}}{2L\sqrt{\Delta}}(e^{\sqrt{\Delta}t}-e^{-\sqrt{\Delta}t})e^{-\alpha t}$
+    \end{center}
+    }%
+}
+
+\begin{figure}[h!]
+    \begin{center}
+        \includegraphics[width=0.8\linewidth]{img/sovrasmorzata.png}
+    \end{center}
+\end{figure}
+
+
+\subsubsection{$\Delta=0$ smorzamento critico}
+\medskip
+
+\noindent\fbox{%
+    \parbox{\textwidth}{%
+    \begin{center}
+        $i(t)=\dfrac{E-V_{C0}}{L}te^{-\alpha t}$
+    \end{center}
+    }%
+}
+
+\begin{figure}[h!]
+    \begin{center}
+        \includegraphics[width=0.8\linewidth]{img/smorzamento_critico.png}
+    \end{center}
+\end{figure}
+
+\subsubsection{$\Delta<0$ risposta sovrasmorzata}
+\medskip
+
+\noindent\fbox{%
+    \parbox{\textwidth}{%
+    \begin{center}
+        $i(t)=\dfrac{E-V_{C0}}{L\omega_d}\sin(\omega_dt)e^{-\alpha t}$
+        \medskip
+
+        $\omega_d=\omega_0^2-\alpha^2$
+    \end{center}
+    }%
+}
+
+\noindent in questo caso avviene uno scambio di energia tra il condensatore e l'induttore.
+
+\begin{figure}[h!]
+    \begin{center}
+        \includegraphics[width=0.8\linewidth]{img/sottosmorzata.png}
+    \end{center}
+\end{figure}
+
+\subsubsection{confronto tra le risposte}
+\noindent Quando si studia il transiorio di una rete, è bene tenere conto dei picchi di corrente e della durata del transitorio:
+\begin{itemize}
+    \item[-] La risposta \textbf{sovrasmorzata} presenta un minor picco di corrente e dinamiche di transitorio più lente. Si entra a regime più tardi.
+    \item[-] La risposta \textbf{sottosmorzata} presenta un picco di corrente più alto e dinamiche di transitorio più veloci. Si entra a regime prima.
+\end{itemize}
+
+\noindent Si noti che la tensione su ogni componente per $t->\infty$ sarà pari a $E$, poichè $C$ si comporta come un aperto.
+
+\begin{figure}[h!]
+    \begin{center}
+        \includegraphics[width=0.8\linewidth]{img/confronto.png}
+    \end{center}
+\end{figure}
+
+\subsection{Metodo per ispezione}
+\begin{enumerate}
+    \item Se $v_{Ci}(0^-)$ e $i_{Lk}(0^-)$ non `e nota, ricavarla dal circuito in $t = 0^{-}$ sostituendo
+    i condensatori con un aperto e gli induttori con un corto cirucito. Per postulato di continuità dell'energia $v_{Ci}(0^-)=v_{Ci}(0^+)$ e
+     $i_{Lk}(0^-)=i_{Lk}(0^+)$.
+    \item Ricavare $x(0)$: nel circuito all'istante $t = 0^+$, sostituire i condensatori e gli induttori con
+    un generatore indipendente di tensione o di corrente di valore $v_Ci(0)$ oppure di $i_Lk(0)$.
+    \item Ricavare $x(\infty)$: Sostituire i condensatori e gli induttori con un aperti oppure  corti.
+\end{enumerate}
 
 \end{document}
