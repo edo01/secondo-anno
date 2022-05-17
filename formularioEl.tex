@@ -20,6 +20,9 @@
 %comment
 \usepackage{comment}
 
+%pdf
+\usepackage{pdfpages}
+
 \title{Formulario Elettrotecnica T}
 \author{Edoardo Carra'}
 
@@ -525,5 +528,198 @@ dell'incognita a regime. In generale, per risolvere un circuito del primo ordine
     un generatore indipendente di tensione o di corrente di valore $v_Ci(0)$ oppure di $i_Lk(0)$.
     \item Ricavare $x(\infty)$: Sostituire i condensatori e gli induttori con un aperti oppure  corti.
 \end{enumerate}
+
+\section{Regime sinusoidale}
+\noindent \underline{Def periodica}: una grandezza tempo invariante $a(t)$ si dice periodica se vale $a(t)=a(t+T)$.
+
+\noindent \underline{Def valor medio}: $A_m=\dfrac{1}{T}\int_{0}^{T} a(t)dx $.
+
+\noindent \underline{Def valor efficace}: $A_{eff}=\sqrt{\dfrac{1}{T}\int_{0}^{T} a^2(t)dx }$.
+\medskip
+
+\noindent In questo corso ci interessiamo dei segnali periodici alternati con $A_m=0$, della forma: 
+\medskip
+
+\noindent $a(t)=$\^{A}$\cos(\omega t+\alpha)$. Dove \^{A} è il valore di picco della sinusoide, $\omega$ è la pulsazione e
+$\alpha$ è la fase.
+
+\noindent \underline{Def $A_{eff,cos}=A$}=$\dfrac{\hat{A}}{\sqrt{2}}$. Il $\sqrt{2}$ è detto fattore di forma.
+
+\noindent La potenza media dissipata da un resistenza è pari a $<P(t)>=\dfrac{R}{T}\int_{0}^{T} i(t)^2dx=\dfrac{R\hat{I}}{2}$. Si noti 
+quindi che una corrente continua di 1 A, genera mediamente le stesse perdite di un corrente alternata di valore efficace pari a 1 A.
+\medskip
+
+\noindent Dati $a(t)=$\^{A}$\cos(\omega t+\alpha)$ e $b(t)=$\^{A}$\cos(\omega t+\beta)$ si definiscono:
+\medskip
+
+\noindent \underline{Def sfasamento}: $\phi = \alpha - \beta$. Si noti che lo sfasamento è indipendente dal sistema di riferimento temporale.
+
+\noindent \underline{Def} $a(t)$ si dice in anticipo rispetto a $b(t)$ se $\phi>0$.
+
+\noindent \underline{Def} $a(t)$ si dice in ritardo rispetto a $b(t)$ se $\phi<0$
+
+\noindent \underline{Def} $a(t)$ si dice in fase con $b(t)$ se $\phi=0$
+
+\noindent \underline{Def} $a(t)$ si dice in quadratura in anticipo/ritardo con $b(t)$ se $\phi=\pm \dfrac{\pi}{2}$
+
+\subsection{Rappresentazione fasoriale}
+\noindent Una sinusoide può essere vista come la parte reale di un vettore nel piano complesso rotante:
+$a(t)=\Re(\hat{A}e^{j(\omega t + \phi)})=\Re(A\sqrt{2}e^{j(\omega t)}e^{j\phi})$. Il vettore rotante può quindi essere scomposto in 2 parti:
+\textit{vettore rotante} $\sqrt{2}e^{j(\omega t)}$ e il \textit{fasore} $Ae^{j\phi}$. È quindi possibile rappresentare un sinusoide utilizzando 
+il fasore corrispondente, il quale contiene le informazioni energetiche e di fase.
+
+\subsection{Trasformata di Steinmetz}
+\noindent Si definisce trasformata di Steinmetz:
+
+\medskip
+\noindent\fbox{%
+    \parbox{\textwidth}{%
+    \begin{center}
+        $S[a(t)]=\dfrac{\sqrt{2}}{T}\int_{0}^{T} a(t)e^{-j \omega t}dx $
+    \end{center}
+    }%
+}
+
+\noindent Da cui è possibile ricavare la trasformata di Steinmetz di una sinusoide: $S[a(t)]=Ae^{j\alpha}$ che è pari 
+al fasore rappresentativo.
+
+\subsubsection{Proprietà}
+\begin{enumerate}
+    \item \underline{Operatore lineare:} $S[n\cdot a(t)+m\cdot b(t)]=n\cdot S[a(t)]+m\cdot S[b(t)]$.
+    \item \underline{Trasformata della derivata:} $S[\dfrac{d a(t)}{dt}]=j\omega S[a(t)]$. La derivata è sfasata di 90 gradi e 
+    amplificata di un fattore pari a $\omega$.
+\end{enumerate}
+
+\subsection{Metodo simbolico}
+\noindent Utilizziamo la trasformata di Steinmetz per risolvere i circuiti in regime sinusoidale. Come variano i teoremi da 
+regime continuo a sinusoidale? $\underline{V}$ indica il fasore ed è uguale a $\underline{V}=Ve^{j\phi}$.
+
+\noindent \underline{LKT}: $\sum \underline{V}_i=0$ 
+
+\noindent \underline{LKC}: $\sum \underline{I}_k=0$ 
+
+\subsection{Equazioni costitutive in forma simbolica}
+\noindent Si definisce \textbf{impedenza}:
+
+\medskip
+\noindent\fbox{%
+    \parbox{\textwidth}{%
+    \begin{center}
+        $\underline{Z}=\dfrac{Ve^{j\alpha}}{Ie^{j\beta}}=\dfrac{V}{I}e^{j(\alpha-\beta)}=Ze^{j\phi}$
+    \end{center}
+    }%
+}
+\medskip
+
+\noindent L'impedenza rappresenta quindi lo sfasamento e il rapporto tra l'ampiezza della corrente e della tensione introdotto da un
+ componente. È nell'impedenza e nella \textbf{legge di Ohm generalizzata} $\underline{V}=\underline{Z}\cdot\underline{I}$
+che vanno cercate le equazioni costitutive dei componenti.
+\medskip 
+
+\noindent L'induttanza può essere scritta anche nella forma \textbf{R+jX} dove R è la parte reale resistiva e 
+la grandezza \textbf{X} è detta \textbf{reattanza} del ramo, e costituisce la parte immaginaria dell'impedenza. La
+reattanza dipende dalla capacità e dall'induttanza del ramo, e dalla pulsazione $\omega$ (risposta in frequenza),
+ mentre la parte reale dipende solamente dai componenti resistivi.
+La reattanza viene distinta in reattanza induttiva $X_L=\omega L$ e capacitiva $X_C=\dfrac{-j}{\omega C}$.
+
+
+\noindent La fase:\begin{itemize}
+    \item[-] È positiva se la tensione è in anticipo rispetto alla corrente (reattanza induttiva).
+    \item[-] È negativa se la tensione è in ritardo rispetto alla corrente (reattanza capacitiva).
+\end{itemize}
+\medskip
+
+\noindent \underline{Generatore sinusoidale di tensione}: $e(t)=\sqrt{2}E cos(\omega t+ \alpha)$ \space $\underrightarrow{S[e(t)]}$ 
+\space $\underline{E}e^{j\alpha}$
+
+\noindent \underline{Generatore sinusoidale di corrente}: $i(t)=\sqrt{2}I cos(\omega t+ \beta)$ \space $\underrightarrow{S[i(t)]}$ 
+\space $\underline{I} e^{j\beta}$
+\pagebreak
+
+\includepdf[pages=70]{elettrotecnica-G-ribani.pdf}
+
+\section{Risonanza}
+\medskip
+
+\noindent\fbox{%
+    \parbox{\textwidth}{%
+    \begin{center}
+        Pulsazione di risonanza: $\omega_0=\dfrac{1}{\sqrt{CL}}$
+    \end{center}
+    }%
+}
+\medskip
+
+\noindent Si cerca un valore di $\omega$ tale per cui la reattanza del circuito risulta essere zero: $\omega L - \dfrac{1}{\omega C}=0$.
+Con l'annullarsi a vicenda di tali componenti, l'impedenza del circuito, alla frequenza alla quale si verifica la risonanza, sarà data 
+dal solo contributo dei componenti resistivi. In particolare essa avrà modulo minimo e fase nulla. 
+
+
+\begin{figure}[h!]
+    \begin{center}
+        \includegraphics[width=0.8\linewidth]{img/risonanza_serie.png}
+    \end{center}
+\end{figure}
+
+\noindent Come si può notare dalla formula di ampiezza e di sfasamento della corrente, per $\omega\rightarrow0$ vince il comportamento
+della capacità che ha reattanza massima e la tensione è in quadratura in ritardo rispetto alla corrente, mentre per $\omega\rightarrow\infty$
+ vince l'induttanza della capacità che ha reattanza massima e la tensione è in quadratura in anticipo rispetto alla corrente.
+ Se $\omega<\omega_0$ il circuito è \textbf{ohmico-capacitivo} e $X_C>X_L$, mentre se $\omega>\omega_0$  il circuito è \textbf{ohmico-induttivo}
+ $X_C<X_L$.
+
+
+\begin{figure}[h!]
+    \begin{center}
+        \includegraphics[width=0.9\linewidth]{img/risonanza_grafici.png}
+    \end{center}
+\end{figure}
+
+\begin{figure}[h!]
+    \begin{center}
+        \includegraphics[width=0.9\linewidth]{img/risonanza_vettori.png}
+    \end{center}
+\end{figure}
+
+\subsection{Antirisonanza}
+\medskip
+
+\noindent\fbox{%
+    \parbox{\textwidth}{%
+    \begin{center}
+        Pulsazione di antirisonanza: $\omega_0=\dfrac{1}{\sqrt{CL}}$
+    \end{center}
+    }%
+}
+\medskip
+
+\noindent Si cerca un valore di $\omega$ tale per cui la reattanza del circuito risulta essere infinita.
+Con l'annullarsi a vicenda di tali componenti, l'impedenza del circuito, alla frequenza alla quale si verifica la risonanza, non permetterà
+il passaggio di corrente. In particolare essa avrà modulo $\infty$ e fase massima. 
+
+
+\begin{figure}[h!]
+    \begin{center}
+        \includegraphics[width=0.35\linewidth]{img/antirisonanza.png}
+    \end{center}
+\end{figure}
+
+\noindent Come si può notare dalla formula di ampiezza e di sfasamento della corrente, per $\omega\rightarrow0$ l'induttore si comporta
+come un corto annullando la reattanza, mentre per $\omega\rightarrow\infty$ è la capacità che si comporta
+come un corto annullando la reattanza. Per $\omega\rightarrow\omega_0$ la corrente sul generatore tende a zero.
+Questo perché si instaura  un regime periodico di scambio energetico tra il condensatore e l'induttanza. In assenza di dispersioni e di
+ resistenze, la circolazione nella maglia costituita dall'induttanza e dal condensatore continua indefinitamente.
+
+
+\begin{figure}[h!]
+    \begin{center}
+        \includegraphics[width=0.8\linewidth]{img/antirisonanza_graph.png}
+    \end{center}
+\end{figure}
+
+\noindent Per $\omega < \omega_0$ la reattanza è positiva, ed il circuito ha un comportamento prevalentemente ohmico-induttivo con
+ uno sfasamento positivo. Per basse frequenze la corrente fluisce prevalentemente nel ramo induttivo, che quindi caratterizza 
+ maggiormente il comportamento del circuito. Per $\omega > \omega_0$ la reattanza è negativa, ed il circuito ha
+prevalentemente una caratteristica ohmico - capacitiva, con sfasamento negativo. Per alte frequenze la
+corrente fluisce maggiormente per il ramo capacitivo.
 
 \end{document}
