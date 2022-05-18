@@ -708,7 +708,9 @@ come un corto annullando la reattanza, mentre per $\omega\rightarrow\infty$ è l
 come un corto annullando la reattanza. Per $\omega\rightarrow\omega_0$ la corrente sul generatore tende a zero.
 Questo perché si instaura  un regime periodico di scambio energetico tra il condensatore e l'induttanza. In assenza di dispersioni e di
  resistenze, la circolazione nella maglia costituita dall'induttanza e dal condensatore continua indefinitamente.
+\medskip
 
+ \noindent $I_C=\sqrt{\dfrac{C}{L}}Ej$ \space $I_L=-\sqrt{\dfrac{C}{L}}Ej$
 
 \begin{figure}[h!]
     \begin{center}
@@ -721,5 +723,122 @@ Questo perché si instaura  un regime periodico di scambio energetico tra il con
  maggiormente il comportamento del circuito. Per $\omega > \omega_0$ la reattanza è negativa, ed il circuito ha
 prevalentemente una caratteristica ohmico - capacitiva, con sfasamento negativo. Per alte frequenze la
 corrente fluisce maggiormente per il ramo capacitivo.
+\pagebreak
+ 
+\section{Potenza in regime sinusoidale}
+\noindent Un dispositivo sottoposto a una tensione $v(t)=\hat{V}cos(\omega t)$ e a una corrente $v(t)=\hat{I}cos(\omega t-\phi)$
+assorbirà/erogherà una potenza pari a $p(t)=v(t)i(t)$. La corrente $i(t)$ può essere scomposta nelle due componenti $i_a$ e $i_r$ , 
+dette rispettivamente \textbf{corrente attiva e reattiva}. La corrente attiva è quindi la componente della corrente in fase con la 
+tensione, mentre la corrente reattiva è la componente in quadratura. Nota che la corrente reattiva è sfasata sempre di 
+$\pm \dfrac{\pi}{2}$. Questo è dovuto unicamente al contributo delle reattanze, le quali si scambiano corrente sempre sfasata di 
+$\pm \dfrac{\pi}{2}$. Quanto questa corrente andrà ad incidere sullo sfasamento totale? Dipende unicamente dal rapporto delle parti 
+resistive e reattive. 
+
+\noindent \underline{Def corrente attiva}: $i_a(t)=\hat{I}cos(\phi)cos(\omega t)$.
+
+\noindent \underline{Def corrente reattiva}: $i_r(t)=\hat{I}sin(\phi)sin(\omega t)$.
+
+\begin{figure}[h!]
+    \begin{center}
+        \includegraphics[width=0.6\linewidth]{img/power.png}
+    \end{center}
+\end{figure}
+
+\noindent La potenza quindi può essere scomposta in due componenti:
+
+\medskip
+\noindent\fbox{%
+    \parbox{\textwidth}{%
+    \begin{center}
+        \textbf{Potenza attiva istantanea}: $p_a(t)=\hat{I}\hat{V}cos(\phi)cos^2(\omega t)=2VIcos(\phi)cos^2(\omega t)$.
+
+        \textbf{Potenza reattiva istantanea}: $p_r(t)=\dfrac{\hat{I}\hat{V}}{2}sin(\phi)sin(2\omega t)=VIsin(\phi)sin(2\omega t)$.
+    \end{center}
+    }%
+}
+\medskip
+
+\begin{figure}[h!]
+    \begin{center}
+        \includegraphics[width=0.6\linewidth]{img/power_ar.png}
+    \end{center}
+\end{figure}
+
+\noindent Dal grafico è possibile evincere una serie di considerazioni:
+\begin{itemize}
+    \item[-] La potenza attiva è sempre maggiore di zero. Questo significa che si tratta di una potenza che è sempre fornita dal generatore 
+    all'utilizzatore. La potenza attiva è detta potenza utile.
+    \item[-] La potenza reattiva invece ha frequenza doppia rispetto alle altre grandezze. Essa rappresenta lo scambio di energia conservativo 
+    che avviene tra il generatore e i componenti dinamici del circuito. La potenza reattiva è quindi un indicatore
+    di uno scambio di energia di tipo conservativo.
+\end{itemize}
+
+\noindent Ci interessiamo a capire quali sono il valore medio della potenza istantanea ed energia fornita al carico calcolate sul periodo T:
+
+\medskip
+\noindent\fbox{%
+    \parbox{\textwidth}{%
+    \begin{center}
+        \textbf{Energia assorbita dal carico in un periodo T}: $<E>=\int_{0}^{T} p(t)dx=\int_{0}^{T} p_a(t)dx+\int_{0}^{T} p_r(t)dx=\int_{0}^{T} p_a(t)dx=VIcos(\phi)T $.
+        \medskip
+
+        \textbf{Potenza media assorbita dal carico in un periodo T}: 
+        
+        $P_a=\dfrac{1}{T}\int_{0}^{T} p(t)dx=VIcos(\phi)$.
+    \end{center}
+    }%
+}
+\medskip
+
+\noindent È possibile notare che la potenza, e quindi l'energia, fornita al carico, \underline{non} dipende dalla potenza reattiva.
+Questo perché il \textit{bilancio energetico} della potenza reattiva sul periodo T è nullo: reattanze e generatore si scambiano energia in modo 
+conservativo. La media della potenza attiva istantanea coincide quindi, con la media della potenza istantanea.
+\medskip
+
+\noindent Il $cos(\phi)$ è detto \textbf{fattore di potenza} e gioca un ruolo molto importante: più corrente e tensione saranno sfasati tra loro,
+minore sarà la potenza utilizzabile dal carico.
+
+\subsection{Potenza complessa}
+
+\medskip
+\noindent\fbox{%
+    \parbox{\textwidth}{%
+    \begin{center}
+        \textbf{Potenza complessa}: $\underline{N}=\underline{V}\cdot\underline{I}^*=Ve^{j\alpha_v}Ie^{-j\alpha_i}=VIe^{j\phi}=VIcos(\phi)+jVIsin(\phi)$
+        \medskip
+
+        \textbf{Potenza apparente}: $|\underline{N}|=\sqrt{P^2+Q^2}$
+    \end{center}
+    }%
+}
+\medskip
+
+\noindent La potenza complessa permette di rappresentare tutte le parti che compongono la potenza coerentemente alla rappresentazione 
+fasoriale. La parte reale rappresenta la potenza attiva \textbf{P}, mentre la parte immaginaria rappresenta la potenza reattiva \textbf{Q},
+cioè il massimo della potenza reattiva istantanea. (ATTENZIONE Q non è la media della potenza reattiva, altrimenti sarebbe 0)
+\medskip
+
+\noindent Dalla legge di Ohm generalizzata è possibile riscrivere la potenza complessa di un ramo della rete:
+$\underline{N}=\underline{Z}\cdot\underline{I}\cdot\underline{I}^*=\underline{Z}\cdot I^2=RI^2+jXI^2$. Quindi $P=RI^2$ e $Q=XI^2$.
+La potenza reattiva può quindi essere positiva nel caso di reattanza induttiva, oppure negativa nel caso di reattanza capacitiva.
+
+\medskip
+\noindent\fbox{%
+    \parbox{\textwidth}{%
+    \begin{center}
+        \textbf{Unità di misura della potenza}
+        \medskip
+        \begin{itemize}
+            \item[-] P watt [W]
+            \item[-] Q volt-ampere reattivi [VAR]
+            \item[-] $|\underline{N}|$ volt-ampere [VA]   
+        \end{itemize}
+
+
+    \end{center}
+    }%
+}
+\medskip
+
 
 \end{document}
