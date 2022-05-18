@@ -1,0 +1,699 @@
+\documentclass{article}
+
+% Language setting
+% Replace `english' with e.g. `spanish' to change the document language
+%\usepackage[italian]{babel}
+\usepackage[utf8]{inputenc}
+
+% Set page size and margins
+% Replace `letterpaper' with `a4paper' for UK/EU standard size
+\usepackage[a4paper,top=2cm,bottom=2cm,left=3cm,right=3cm,marginparwidth=1.75cm]{geometry}
+
+% Useful packages
+\usepackage{amsmath}
+\usepackage{graphicx}
+\usepackage[colorlinks=true, allcolors=blue]{hyperref}
+\usepackage{longtable}
+%images
+\usepackage[rightcaption]{sidecap}
+\usepackage{graphicx}
+%comment
+\usepackage{comment}
+
+\title{Appunti di Fondamenti di telecomunicazioni T}
+\author{Edoardo Carra'}
+
+
+\begin{document}
+\maketitle
+
+\begin{comment}
+%\section{Introduzione}
+%\begin{SCfigure}[0.7][!ht]
+    \caption{Virtualmente i livelli comunicano solo con livelli a loro pari,
+    non c'è comunicazione tra livelli se non attraverso delle 
+    apposite interfacce.
+    Ogni livello è formato da software chiamato \textbf{protocollo}. }
+    \includegraphics[width=0.7\textwidth]{img/uno/0009.jpg}
+\end{SCfigure}
+
+\begin{SCfigure}[0.7][!ht]
+    \caption{L'applicazione utilizzerà delle primitive, offerte dallo stack
+    di comunicazione.}
+    \includegraphics[width=0.6\textwidth]{img/uno/0014.jpg}
+\end{SCfigure}
+
+
+\begin{SCfigure}[0.7][!ht]
+    \centering
+    \includegraphics[width=0.7\textwidth]{img/uno/0016.jpg}
+\end{SCfigure}
+
+\begin{SCfigure}[0.7][!ht]
+    \caption{I nodi intermedi, come si può vedere dallo schema, si limitano 
+    a gestire i primi tre livelli. Gli ultimi 4 livelli non sono 
+    presenti nei nodi intermedi.}
+    \includegraphics[width=0.6\textwidth]{img/uno/0018.jpg}
+\end{SCfigure}
+
+\begin{SCfigure}[0.7][!ht]
+    \centering
+    \includegraphics[width=0.9\textwidth]{img/uno/0038.jpg}
+\end{SCfigure}
+\end
+\end{comment}
+
+\subsection{Ethernet- IEE 802.03}
+\begin{figure}[!ht]
+    \centering
+    \includegraphics[width=0.9\textwidth]{img/due/0002.jpg} 
+\end{figure}
+
+\noindent Ethernet è una famiglia di standard stabilito dalla IEEE come \textbf{802.3}, che comprendono due livelli dello stack:
+ \textbf{Link layer} e \textbf{Physical layer}. 
+Il Link Layer si occupa di gestire la comunicazione tra dispositivi, punto a punto ed è a sua volta è suddiviso in due: \textbf{LLC} e
+ \textbf{MAC} layers. Il MAC layer si occupa invece di gestire l'accesso al mezzo fisico condiviso.
+ Ethernet ha un accesso a contesa, cioè chi deve comunicare si contende il canale di comunicazione. Questa
+ modalità dal punto di vista storico risultò la scelta vincente contro il token ring di IBM, il quale accesso avveniva
+attraverso "token".
+
+\begin{figure}[!ht]
+    \centering
+    \includegraphics[width=0.9\textwidth]{img/due/0003.jpg} 
+\end{figure}
+
+\noindent Il frame di livello 2, contiene il pacchetto che il livello 3 gli ha fornito e lo incapsula in un \textbf{frame header} e in un
+\textbf{frame trailer}. Il pacchetto di livello superiore così incapsulato viene chiamato \textbf{payload}.
+Il frame è composto da: \begin{enumerate}
+    \item I primi 8 byte servono al livello fisico per la sincronizzazione. Sono necessari per settarsi esattamente sulla stessa frequenza.
+    I primi 7 bytes sono una successione di uno e zeri alternati, mentre l'ultimo bit dell'ottavo byte è un doppio 1
+    per segnalare l'inizio del pacchetto.
+    \item \textbf{dest and source address}: rappresentano il \textbf{MAC address} del destinatario e del mittente. L'indirizzo MAC è composto
+    da 6 bytes, cioè 12 cifre esadecimali. 
+    \item \textbf{Length or type}: Indica il tipo di protocollo di livello superiore incapsulato nel frame (es IPv4 o IPv6).
+    \item \textbf{Data and padding}: I dati incapsulati nel frame, con l'aggiunta di un padding nel caso i dati non raggiungessero la dimensione minima.
+    \item \textbf{CRC}: codice a correzione d'errore.
+\end{enumerate}
+
+\begin{figure}[!ht]
+    \centering
+    \includegraphics[width=0.9\textwidth]{img/due/0004.jpg} 
+\end{figure}
+\noindent Esiste una grandezza massima per il frame Perché negli anni 80 la memoria della scheda di rete costava molto. Mentre è necessario imporre un 
+limite minimo a causa dell'implementazione del protocollo CSMA-CD per la gestione dell'interferenza.
+
+\begin{figure}[!h]
+    \begin{center}
+        \includegraphics[width=0.9\textwidth]{img/due/0005.jpg}         
+    \end{center}
+\end{figure}
+
+\noindent Per quanto riguarda la struttura dell'indirizzo MAC, i primi tre bytes indicano il produttore. Esistono tre tipi di indirizzi:
+\begin{enumerate}
+    \item \textbf{Unicast}: seconda cifra esadecimale è pari.
+    \item \textbf{Multicast}: seconda cifra esadecimale è dispari.As with the unicast and broadcast addresses, the multicast IP
+     address requires a corresponding multicast MAC address to actually deliver frames on a local network
+    \item \textbf{Broadcast}: \textit{FF:FF:FF:FF:FF:FF}.
+\end{enumerate}
+
+\noindent N.B. Un pacchetto viene sempre inviato sul canale condiviso, sia unicast che multicast.
+Quello che cambia è come questo viene usato: broadcast non viene mai scartato, unicast viene scartato in caso non ci sia un match 
+tra mac address del destinatario e il mac del dispositivo.
+\medskip
+
+\noindent L'indirizzo viene serializzato byte per byte, da destra verso sinistra, in modo tale che il primo bit che arriva faccia capire 
+se si è in multicast oppure in unicast.
+
+\begin{figure}[!ht]
+    \begin{center}
+        \includegraphics[width=0.9\textwidth]{img/due/0009.jpg}         
+    \end{center}
+\end{figure}
+
+\noindent (C'è un cavo comune orizzontale e il tempo è in verticale)
+
+\noindent Il segnale rosa parte al tempo t1 e grazie al ritardo introdotto dal mezzo compie un triangolo sul grafico. Questo ritardo non permette
+ad un dispositivo qualunque della rete di capire se il canale sia effettivamente in uso. C in questo caso per esempio non si accorge 
+che il canale è occupato dal segnale rosa e genera il suo segnale giallo, creando una collisione di dominio grigio.
+Il primo dispositivo che sta trasmettendo che rileva una collisione, cioè banalmente saranno presenti per un certo tempo più di 5V, invia un segnale
+di \textbf{jamming} sul canale per disturbare volontariamente il segnale, comunicando di fatto all'altro dispositivo che c'è stata
+interferenza.
+The jam signal or jamming signal is a signal that carries a 32-bit binary pattern sent by a data station to inform the other 
+stations of the collision and that they must not transmit.
+\pagebreak
+
+\begin{figure}[!ht]
+    \begin{center}
+        \includegraphics[width=0.7\textwidth]{img/due/0011.jpg}         
+    \end{center}
+\end{figure}
+
+\noindent L'idea è che il caso peggiore in cui si verifica interferenza sia dato da un tempo di propagazione massimo (che nel caso di
+ethernet è stabilito a priori) moltiplicato per due - \textbf{total trip time}. Questo perché il segnale deve propagarsi fino al 
+destinatario che nel caso peggiore si trova ad un ritardo massimo dal mittente, e se quest'ultimo comincia a spedire esattamente
+ nel momento in cui gli arriva il segnale, ci vorrà un altro tempo massimo prima che il segnale di jamming raggiunga di nuovo il 
+ mittente iniziale. Per questo la lunghezza minima deve essere tale che io stia ancora inviando prima che mi arrivi il pacchetto, 
+ altrimenti non rilevo l'interferenza.
+
+\noindent Quindi il pacchetto deve essere tale da contenere
+ un Nbit = frequenzabit*2*tmax = 512 bit = 64  bytes, di cui 46 bytes di payload (nel caso del 10Mbps).
+
+ \begin{figure}[!ht]
+    \begin{center}
+        \includegraphics[width=0.9\textwidth]{img/due/0012.jpg}         
+    \end{center}
+\end{figure}
+
+\noindent \textbf{CSMA-CD(Carrier Sensing Multiple Access-Collision Detection)}
+K è il contatore degli insuccessi. Per riprovare non ha senso farlo immediatamente, altrimenti ci sarebbe un'alta probabilità di finire
+in un'altra collisione. Si aspetta un tempo casuale R compreso tra 0 e $2^(K)$ - 1, che poi va moltiplicato per il tempo di frame
+ ottenendo così il \textbf{back-off time}. Più è alto il numero degli insuccessi più si aspetterà in media
+(tieni conto che due dispositivi, secondo questa politica, è probabile che vadano incontro ad una collisione: il 50\% 
+ la prima volta, il 25 \% la seconda ecc..).
+
+\noindent Come faccio a sapere se la comunicazione è andata male? Il destinatario può usare il \textbf{CRC}. 
+Con questo metodo, però, solo il destinatario è a conoscenza dell'errore. Il protocollo ethernet non ha alcuna protezione 
+contro questo genere di errori, infatti è compito dei protocolli di livello più alto gestire questo genere di errori.
+
+\noindent \underline{Introdurre un ack può essere un ottimizzazione ma non un requisito del livello.}
+
+\subsubsection{Hub e switch}
+\noindent L'hub è un dispositivo che lavora semplicemente sul livello 1, per questo si preferisce utilizzare lo switch. Questo,
+lavorando a livello più alto, gestisce anche l'interferenza. Questo perché lo switch non si limita a ripetere il segnale, ma smista
+ il segnale solamente al destinatario utilizzando un buffer di supporto. Si elimina il mezzo condiviso, i cavi terminano negli switch. 
+ Il \textbf{dominio di collisione} è limitato al ramo connesso allo switch, i domini di collisione sono N tanti quanti sono i 
+ dispositivi connessi alla rete.
+ Quindi quello che succede è che un dispositivo invia un messaggio, lo switch capisce chi è il destinatario, e poi lo inserisce nel
+  buffer del destinatario. Si elimina la necessità di utilizzare CSMA-CD(in realtà non è proprio così), abbiamo cambiato il protocollo di accesso al mezzo condiviso. 
+  È possibile anche attuare una gestione del controllo di flusso più efficiente. Si regola la velocità di 
+  trasmissione in base alla capacità di ricezione del ricevitore.
+  
+\noindent Come fa lo switch a sapere dove si trova il destinatario del pacchetto? Si parte da una tabella vuota, che si riempie automaticamente man
+mano che arriva a conoscere gli indirizzi delle varie porte a cui invia/riceve frame.
+
+\subsection{Codifica Manchester}
+\begin{figure}[!ht]
+    \begin{center}
+        \includegraphics[width=0.9\textwidth]{img/due/Manchester_encoding_both_conventions.png}         
+    \end{center}
+\end{figure}
+
+\noindent Manchester coding is a special case of binary phase-shift keying (\textbf{BPSK}), where the data controls the phase of a
+ square wave carrier whose frequency is the data rate. Manchester code ensures frequent line voltage transitions, directly proportional
+ to the clock rate; this helps clock recovery. 
+ Manchester code always has a transition at the middle of each bit period and may (depending on the information to be transmitted) have 
+ a transition at the start of the period also. The direction of the mid-bit transition indicates the data. Transitions at the period 
+ boundaries do not carry information. They exist only to place the signal in the correct state to allow the mid-bit transition. 
+ The existence of guaranteed transitions allows the signal to be self-clocking, and also allows the receiver to align correctly; the
+ receiver can identify if it is misaligned by half a bit period, as there will no longer always be a transition during each bit period.
+ The price of these benefits is a doubling of the bandwidth requirement compared to simpler NRZ coding schemes. 
+
+
+ \begin{figure}[!ht]
+    \begin{center}
+        \includegraphics[width=0.5\textwidth]{img/due/manchester_encoding.png}         
+    \end{center}
+\end{figure}
+
+\subsection{Altri standard}
+\noindent 10 Mbit/s sono pochi, quindi esistono altri standard come ethernet a 100Mbit/s, 1Gbit/s ecc. Con l'aumentare dello standard
+l'unico dispositivo di collegamento permesso è lo switch. L'obiettivo però è mantenere la banda costante anche se aumenta di un fattore $10^n$ la 
+frequenza di simbolo. I trade-off tra cui poter scegliere sono:
+\begin{enumerate}
+    \item Aumentare lo standard dei cavi (cat-5 ecc...), di fatto aumenta la "frequenza di taglio" del cavo;
+    \item Dimezzare la banda utilizzando una NRZ al posto della Manchester. Onde evitare problemi di sincronizzazione però, è necessario 
+    utilizzare una codifica che garantisca un certo numero di transizioni per ogni simbolo, in modo da poter permettere al ricevente di 
+    sincronizzarsi. Per questo si utilizza la codifica 4b5b, la quale però aumenta del 25\% la banda utilizzata rispetto alla NRZ (simboli da 5 bit per rappresentare
+    4 bit).
+    \begin{figure}[!ht]
+        \begin{center}
+            \includegraphics[width=0.3\textwidth]{img/due/4b5b.jpg}         
+        \end{center}
+    \end{figure}
+
+    \item Introduzione del \textbf{flow control}
+    \item Possibile utilizzare la modalità \textbf{full-duplex} grazie al secondo doppino presente nel cavo oppure utilizzare fino 
+    a 2 canali (sono presenti in totale 4 doppini nel caso permettendo quindi l'utilizzo di due canali in ingresso e 2 in uscita).
+    il 10 Mbit/s usa un doppino, il 100Mbit/s ne usa due e la 1 Gbit/s ne usa 4. Nota che l'introduzione del doppio canale permette di eliminare
+    la necessità di utilizzare il CSMA-CD.
+    \item Viene introdotta anche \textbf{l'auto negoziazione} per permettere a due dispositivi di trovare una tecnologia comune con la quale
+    comunicare (tutte le schede di rete devono poter andare almeno a 10 Mbit/s).
+    \item   Per   assicurare che l'algoritmo CSMA/CD continui a funzionare, la relazione tra la dimensione
+    minima del frame e la lunghezza massima del cavo deve essere mantenuta in proporzione
+    alla velocità della rete che passa da 10 Mbps a 100 Mbps. Quindi o va aumentata la dimensione minima di frame di 64 byte o dovrà diminuire proporzionalmente la lunghezza
+     massima di cavo di 2500 m. La scelta più facile è stata di abbassare la distanza tra ogni coppia di
+    stazioni di un fattore 10, poiché un hub con un cavo da 100 metri rientra già in questo nuovo
+    limite massimo.
+ \end{enumerate}
+
+\begin{figure}[!ht]
+    \begin{center}
+        \includegraphics[width=0.6\textwidth]{img/due/0019.jpg}         
+    \end{center}
+\end{figure}
+
+\noindent The "100" in the media type designation refers to the transmission speed of 100 Mbit/s, while the "BASE" refers to baseband signaling.
+The letter following the dash ("T" or "F") refers to the physical medium that carries the signal (twisted pair or fiber, respectively), 
+while the last character ("X", "4", etc.) refers to the line code method used. Fast Ethernet is sometimes referred to as \textbf{100BASE-X}, 
+where "X" is a placeholder for the FX and TX variants.
+
+\noindent In telecommunications and signal processing, \textbf{baseband} is the range of frequencies occupied by a signal that has not been modulated 
+to higher frequencies
+
+\noindent Con la \textbf{1000 BASE-T} vengono introdotti dei nuovi requisiti: \begin{enumerate}
+    \item Auto-negoziazione.
+    \item Each 1000BASE-T network segment is recommended to be a maximum length of 100 meters (330 feet),
+    and must use Category 5 cable or better (including Cat 5e and Cat 6). 
+    \item Bit Error Rate of less than or equal to $10^{-10}$
+\end{enumerate}
+
+\noindent I cavi smettono di essere unidirezionali.  Poiché non si verifica contesa, non si utilizza il protocollo CSMA/CD, perciò la lunghezza massima del cavo 
+dipende dall'energia del segnale e non più dal tempo imposto dal CSMA/CD.Le NIC capiscono automaticamente quale verso usare per ogni doppino presente nel cavo.
+Quando si inizia ad andare a certe velocità, si bufferizzano i pacchetti affinché non si sovraccarichi la CPU con troppe richieste.
+\medskip
+
+\noindent The three-bit symbols are then mapped to voltage levels which vary continuously during transmission.(1000BASE-T) An example mapping 
+is as follows: 
+
+\begin{figure}[!ht]
+    \begin{center}
+        \includegraphics[width=0.4\textwidth]{img/due/symbols1000.png}         
+    \end{center}
+\end{figure}
+
+\noindent Una tabella utile per quanto riguarda l'interpretazione degli standard:
+
+\begin{figure}[!ht]
+    \begin{center}
+        \includegraphics[width=0.9\textwidth]{img/due/0024.jpg}         
+    \end{center}
+\end{figure}
+
+\pagebreak
+
+\section{WIFI - IEEE 802.11}
+Il principale insieme di standard per le LAN Wireless è IEEE 802.11, meglio conosciuto come WiFi (Wireless Fidelity).
+Tutti i protocolli 802, inclusi 802. 11 e Ethernet, presentano una certa somiglianza nella propria
+struttura. Il livello fisico corrisponde circa al livello fisico OSI, ma il livello data link nei protocolli 802 è diviso in due
+ o più sotto livelli.
+
+\begin{figure}[!ht]
+    \begin{center}
+        \includegraphics[width=0.9\textwidth]{img/tre/3.jpg}         
+    \end{center}
+\end{figure}
+
+\noindent In 802.11 il sottolivello MAC determina com'è allocato il canale, cioè a chi tocca
+trasmettere. Sopra c'è il sottolivello LLC (logical link control) il cui compito è nascondere
+le differenze tra i differenti 802 e renderli indistinguibili al livello di rete; oggi LLC è un
+livello di raccordo che identifica il protocollo (ad esempio IP) trasportato all'interno di un
+frame 802.11.(riguardare)
+\medskip
+
+Le reti 802.11 possono essere utilizzate in due modalità: nella modalità con \textbf{infrastruttura}
+(infrastructure BSS) (\textbf{BSS = Basic Service Set}) ogni client è associato a un \textbf{AP} (access
+point) connesso a sua volta all'altra rete. Il client spedisce e riceve i propri pacchetti
+attraverso l'AP. Alcuni access point possono essere connessi insieme, in genere attraverso
+una rete cablata che prende il nome di sistema di distribuzione (distribution system).
+L'altra modalità prende il nome di rete \textbf{ad hoc}, Questa modalità consiste in una collezione
+di computer associati tra loro che possono spedirsi direttamente i frame. Non esiste alcun
+access point.
+
+\noindent N.B. l'access point è anch'esso parte della BSS. 
+
+
+\begin{figure}[!ht]
+    \begin{center}
+        \includegraphics[width=0.9\textwidth]{img/tre/7.jpg}         
+    \end{center}
+\end{figure}
+
+\noindent Lo standard 802.11 definisce tre diverse classi di frame: dati, controllo e gestione. Ognuna
+ha un'intestazione composta da una varietà di campi utilizzati all'interno del sottolivello
+MAC. \begin{enumerate}
+    \item \textbf{Frame control}:lungo 2 byte è costituito da 11 sotto campi. Il primo di questi è il \textbf{protocol version}, impostato a 00.
+    È lì per permettere future versioni di 802.11. Quindi ci sono i campi \textbf{type} che può valere dati, controllo e gestione e \textbf{subtype}, 
+    ad esempio RTS o CTS; per un frame di dati regolare sono fissati a $100000_2$. ToDS and FromDS: Each is one bit in size. They indicate whether a data frame is headed for a distribution system.
+     Control and management frames set these values to zero.
+Il bit \textbf{more fragments} significa che seguiranno più frammenti. Il bit \textbf{retry} indica la ritrasmissione di un frame spedito in precedenza. Il bit \textbf{power management}
+indica che il mittente sta andando in modalità power-save. Il bit more data indica che il mittente ha altri dati per il ricevente. Il bit \textbf{protected frame} indica
+che il corpo del frame è stato criptato per sicurezza (per esempio WPA2). Infine, il bit \textbf{order} indica al ricevente che il livello superiore si aspetta che la sequenza
+ di frame arrivi rigorosamente in ordine.
+
+
+\begin{figure}[!ht]
+    \begin{center}
+        \includegraphics[width=0.7\textwidth]{img/tre/addressesFieldsWifi.jpg}         
+    \end{center}
+\end{figure}
+
+\end{enumerate} 
+
+\pagebreak
+\section{Livello di trasporto}
+\noindent I principali protocolli di trasporto sono \textbf{UDP} e \textbf{TCP}. UDP si caratterizza per essere connection less (ogni livello può essere connection less oppure
+connection oriented ricorda). TCP invece è orientato alla connessione invece.
+In generale vale che ogni livello offre al livello superiore dei servizi, questi servizi sono la composizione dei servizi offerti dal livello di sotto con l'aggiunta di 
+qualcosa. (il modello ricorda l'estensione delle classi)
+In questo caso UDP non aggiunge particolari estensioni al servizio offerto da IP.
+
+\begin{figure}[!ht]
+    \begin{center}
+        \includegraphics[width=0.7\textwidth]{img/quattro/0001.jpg}         
+    \end{center}
+\end{figure}
+
+\subsection{UDP- USER DATAGRAM PROTOCOl}
+\noindent Un datagram (oppure segmento) UDP viene incapsulato in un pacchetto IP aggiungendo poche funzionalità ai servizi offerti, la lunghezza
+del payload può raggiungere un massimo di 65.515 byte:
+\begin{itemize}
+    \item multiplexing grazie alle porte UDP: attraverso gli indirizzi di livello 4 posso discriminare quale applicazione è il destinatario su un determinato dispositivo.
+    \item error detection con checksum. il checksum viene controllato una sola volta a differenza del checksum dell'IP. Il checksum può essere disabilitato.
+    \item Unicast, multicast e broadcast. Questo viene fatto utilizzando i servizi offerti dal livello sottostante.
+\end{itemize}
+
+\noindent RFC - request for comments: A Request for Comments is a publication in a series, from the principal technical development and standards-setting bodies for the Internet, most 
+prominently the Internet Engineering Task Force. RFC 768 è quello dell'UDP. https://datatracker.ietf.org/doc/html/rfc768
+\medskip
+
+\begin{figure}[!ht]
+    \begin{center}
+        \includegraphics[width=0.7\textwidth]{img/quattro/0003.jpg}         
+    \end{center}
+\end{figure}
+\pagebreak
+
+\noindent I principali utilizzi di questo protocollo sono per tutti quei protocolli di livello più alto che richiedono di instaurare una connessione del tipo query-response.
+(e quindi l'overhead dell'instaurarsi della connessione non è necessario). 
+
+
+\begin{figure}[!ht]
+    \begin{center}
+        \includegraphics[width=0.6\textwidth]{img/quattro/0004.jpg}         
+    \end{center}
+\end{figure}
+
+\noindent Parentesi sul checksum: a differenza del protocollo IP, il checksum viene calcolato su header, dati(primo protocollo end to end, ha senso) e pseudo header perché
+ conoscendo ip destinatario e mittente all'inizio della comunicazione, posso comprenderli nel calcolo del checksum. 
+Questo genera problemi di inconsistenza perché si basa sulla conoscenza dell'header del livello sottostante, che può ipv4 oppure ipv6.
+Un altro problema è dato dal NAT: questo cambia gli indirizzi su cui il checksum era stato calcolato. Quindi il nuovo header avrà un checksum errato che va sostituito con un
+checksum aggiornato con i nuovi valori di IP:porta aggiunti dal NAT.
+
+\subsection{RTP}
+
+\noindent È un protocollo di livello trasporto, non affidabile, che si basa sulla trasmissione via UDP che permette la gestione ad hoc per il traffico multimediale. Solitamente i protocolli
+stanno nel kernel, mentre RTP è presente nella user space. Invece di implementare totalmente da capo, mi baso sull'UDP aggiungendo delle funzionalità in più. Il protocollo è 
+di livello 4+. Di fatto è l'applicazione che scrive questo payload.
+\medskip
+
+\noindent L'header è composto da un \textbf{CC}, cioè l'identificativo di flusso. Il \textbf{payload type} serve per decodificare il contenuto multimediale fornendo tipo di contenuto,
+bit rate ecc... Il \textbf{sequence number} viene incrementato ogni volta che viene inviato un pacchetto. Il \textbf{timestamp}: il primo campione del payload quando è stato inviato?
+A cosa servono entrambi? Servono per capire quale sia l'error rate.
+
+
+\begin{figure}[!ht]
+    \begin{center}
+        \includegraphics[width=0.6\textwidth]{img/quattro/0007.jpg}         
+    \end{center}
+\end{figure}
+
+\noindent Avere sequence number e timestamp permette di calcolare l'\textbf{error rate} e permette di capire quando il dato deve essere riprodotto nel tempo (i pacchetti
+ arrivano a intervalli non regolari). Il timestamp serve inoltre perché il flusso di dati può cambiare in base alla codifica (mp3 ha coding rate variabile, riguarda MP3!!) ecc... Infine il timestamp serve per
+ sincronizzare e per eliminare la ridondanza.(se un'immagine è ferma in un video   non ha senso inviare tutti i frame, ma terrò l'immagine costante fino al prossimo timestamp)
+\medskip
+
+\noindent Il campo \textbf{Synchronization source identifier} specifica a quale flusso appartiene il pacchetto e rappresenta
+ l'informazione utilizzata per il multiplexing e il demultiplexing di più flussi dati in un singolo flusso di pacchetti UDP.
+
+
+
+\subsubsection{RTCP}
+I dati sono inviati con il protocollo RTP, però per avere una retroazione della qualità si inviano dei segmenti TCP di controllo per avere una gestione della qualità della connessione.
+Per esempio viene informato a quanto ammonta il \textbf{jitter}, cioè la variazione di ritardo. Se il delay si riesce a compensare con il timestamp, il jitter si compensa solamente
+con un buffer. Però se il buffer è maggiore, il ritardo nella riproduzione è anch'esso maggiore, con una migliore gestione del jitter.
+Il feedback è fondamentale per la gestione della congestione.
+
+\subsection{TCP}
+\noindent TCP è stato progettato appositamente per fornire un flusso di byte affidabile end-to-end su una rete. È molto più 
+complesso dell'UDP in quanto deve offrire un servizio orientato alla connessione affidabile, a partire dal servizio offerto da IP. I dati 
+sono visti come un \underline{flusso di byte}, anche se sono organizzati in pacchetti chiamati segmenti. Mittente e destinatario si 
+chiamano \textbf{socket}. Le porte come in UDP sono lunghe 16 bit.
+
+
+\noindent Il TCP, a differenza dell'UDP, non supporta unicast e multicast.
+
+\noindent Se un pacchetto IP viene perso, è il protocollo TCP che prova a rispedire i pacchetti.I nodi intermedi, lavorando a livello 3, non fanno nulla a riguardo perché non
+immagazzinano i dati. ARQ è il protocollo per recuperare i pacchetti persi ed è esclusivamente host to host. Si preferisce fare un intero avanti e indietro piuttosto che à
+complicare la rete intermedia con l'aggiunta della gestione dei pacchetti persi. Questo viene fatto perché il ritardo non è proibitivo (nelle DTN questo non vale). 
+Il recupero delle perdite viene quindi fatto a livello di sorgente nel caso entro un certo limite di tempo non arrivi l'ack di conferma.
+
+\noindent La regolazione di flusso serve per la gestione della congestione e la capacità di ricezione del ricevente. Questo viene realizzato in modo decentralizzato,
+ basato su feedback. Si evita quindi l'utilizzo del controllore centrale per spartire la banda tra i nodi di internet (è un bene).
+\medskip
+
+\noindent Qual è la relazione tra TCP ports e UDP ports? Nessuna! Sono due protocolli diversi e quindi gli indirizzi sono diversi.
+\medskip
+
+\noindent È il TCP che organizza i segmenti, indipendentemente dal livello applicazione e mantiene indipendente la scrittura e la lettura.
+Una connessione è individuata da $IP_{dest}:Port_{dest}-IP_{source}:Port_{source}$. La differenza principale della gestione dei segmenti 
+tra UDP e TCP è che il livello applicazione con UDP può decidere la dimensione dei dati da inviare per ogni pacchetto, mentre nel TCP 
+è il livello 4 che gestisce la formazione dei segmenti.
+
+\noindent La connessione una volta stabilita, è bidirezionale. Ogni segmento deve essere confermato da un ACK che può essere in \textbf{piggybacked} nel caso il ricevente abbia qualcosa 
+da dire. Qual è il vantaggio fondamentale di questa tecnica? La riduzione dell'overhead unendo l'informazione ad un segmento di controllo.
+
+\noindent Ogni segmento è caratterizzato da un \textbf{sequence number} che indica il byte della sequenza del primo byte del payload.
+L'ack non segnala "è arrivato tutto fino a N" , ma segnala "mi aspetto un SEQ=N+1"(di fatto gli ack sono cumulativi).
+Siccome TCP richiede l'ordine dei pacchetti in ricezione, se il destinatario non riceve il SEQ previsto, continua ad inviare un ack
+ per ogni pacchetto della sequenza sbagliato, attuando il cosiddetto \textbf{ack duplicato}.(simile al polling nel wifi)
+ Il dupack ci fornisce comunque un'informazione: i messaggi continuano ad arrivare. Gli ack hanno una dimensione di 20byte.
+
+ \noindent Nel caso la comunicazione sia asimmetrica, cioè la velocità in ricezione sia diversa da quella in spedizione, esistono
+ delle implementazioni che prevedono l'invio di un ack ogni due segmenti.
+ \medskip
+
+\noindent Inoltre per la gestione del flusso, viene inserito il timestamp nel pacchetto TCP che verrà riportato anche nell'ack. Questo
+ permette al mittente di calcolare il round trip time per fornire il feedback. TCP è un algoritmo 
+ a \textbf{retroazione} e si dice che RTT è l'elemento critico del TCP. (se intercorre molto tempo tra azione e reazione vado più piano)
+ 
+ \begin{figure}[!ht]
+    \begin{center}
+        \includegraphics[width=0.8\textwidth]{img/quattro/0016.jpg}         
+    \end{center}
+\end{figure}
+
+\begin{enumerate}
+    \item sequence number si evince che possono essere inviati fino a un max di 4 GB.
+    \item ack number di dimensioni omogenee a seq number.
+    \item TCP header: indica la dimensione in parole da 4 byte dell'header. L'header deve essere quindi multiplo di 32 bit
+    (vale anche per udp e ip).    
+    \item window size (receiver window): indica quanto spazio in byte è ancora presente nel buffer del ricevente.
+    \item flags: 
+        \begin{itemize}
+            \item \textbf{spazio nero}: sono presenti due flag \textbf{ECE} e \textbf{CWR}. Siccome in ip è presente il flag del QoS che viene ripetuto
+            fino al destinatario in caso di congestione della rete, si utilizza ECN-Echo per comunicarlo al mittente tramite TCP.
+            ECE indica al mittente che il destinatario ha ricevuto un pacchetto IP con congestione, mentre CWR indica al destinatario 
+            che il mittente ha ricevuto la segnalazione di congestione.
+            \item \textbf{ack}: indica che l'ack number ha un significato.
+            \item \textbf{urg}: il campo urgent ha significato.
+            \item \textbf{psh}: asks to push the buffered data to the receiving application.
+            \item \textbf{rst}: reset the connection.
+            \item \textbf{syn}: iniziare la connessione.
+            \item \textbf{fin}: terminare la connessione.
+\end{itemize}
+
+\item urgent pointer: indica che è appena stato inviato l'ultimo byte di una sequenza urgente.
+\item checksum: anche qui calcolata sullo pseudoheader.
+\end{enumerate}
+\subsubsection{Three way handshake}
+
+\begin{figure}[!ht]
+    \begin{center}
+        \includegraphics[width=0.8\textwidth]{img/quattro/0018.jpg}         
+    \end{center}
+\end{figure}
+\begin{enumerate}
+    \item host 1 vuole iniziare la comunicazione: syn=1 e seq=x=random(0,$2^{32}$-1)$->$. \textbf{pacchetto "syn"}.
+    \item host 2 rimanda un \textbf{pacchetto syn-ack}. ack coerente al canale di comunicazione tra host 1 e host 2. (attenzione non è +1 ma è len(payload)+1)
+    Mentre syn è il numero di sequenza di host 2.
+    \item il terzo e ultimo passo è un \textbf{pacchetto ack} da parte di host 1 \underline{senza syn}.
+\end{enumerate}
+\noindent Il secondo caso rappresenta una possibile collisione.
+\pagebreak
+
+\subsubsection{Four way handshake}
+\begin{figure}[!ht]
+    \begin{center}
+        \includegraphics[width=0.3\textwidth]{img/quattro/close.png}         
+    \end{center}
+\end{figure}
+\noindent Come funziona la chiusura della connessione? Se un terminale fa una close NON chiude la connessione, ma chiude solamente il proprio 
+canale verso il secondo host. La chiusura può avvenire in due modi:
+\medskip
+
+\noindent 4 way handshake:\begin{enumerate}
+    \item Host 1 invia un FIN.
+    \item Host 2 invia ACK. Host1 non può più comunicare.
+    \item Host 2 invia FIN.
+    \item Host 1 invia ACK. Host 2 non può più comunicare e si chiude la comunicazione 
+\end{enumerate}
+
+\noindent Oppure la chiusura avviene anche per 3 way handshake:\begin{enumerate}
+    \item Host 1 invia un FIN.
+    \item Host 2 invia un FIN-ACK e host1 non può più comunicare.
+    \item host 1 invia ACK e host 2 non può più comunicare e si chiude la comunicazione.
+\end{enumerate}
+
+\noindent Il timeout a cosa serve? serve perché l'ack potrebbe non arrivare all'host che vuole chiudere la connessione. Se all'host
+non arriva l'ack, non può sapere se è realmente arrivato il FIN, quindi lo rimanda. Questo si ripete per 5 o 6 volte prima di terminare 
+definitivamente.
+
+\begin{figure}[!ht]
+    \begin{center}
+        \includegraphics[width=0.9\textwidth]{img/quattro/0020.jpg}         
+    \end{center}
+\end{figure}
+\noindent Diagramma degli stati. righe spesse: casi comuni, righe sottili: casi speciali. Lato server tratteggiato. 
+Le transizioni sono contrassegnate da \textit{causa/effetto}.
+
+\subsubsection{Controllo del flusso}
+\begin{figure}[!ht]
+    \begin{center}
+        \includegraphics[width=0.7\textwidth]{img/quattro/0023.jpg}         
+    \end{center}
+\end{figure}
+\begin{enumerate}
+    \item \textbf{Flow control}: non spedire pià velocemente di quello che il ricevente può gestire
+    \item \textbf{Congestion control}: nel secondo caso il problema è tra i nodi della rete, la quale non riesce a gestire 
+    tutti i pacchetti che gli sono stati forniti. Il link in cui avviene la congestione si chiama bottleneck.
+\end{enumerate}
+
+\begin{figure}[!ht]
+    \begin{center}
+        \includegraphics[width=0.7\textwidth]{img/quattro/0024.jpg}         
+    \end{center}
+\end{figure}
+
+\noindent Per capire come funzionano i due algoritmi è necessario capire come funzionano le finestre(per comodità la grandezza della window è fornita 
+in MAXPAYLOADLENGTH):
+- TCP uses a sliding window flow control protocol. In each TCP segment, the receiver specifies in the receive window field the amount
+ of additionally received data (in bytes) that it is willing to buffer for the connection. The sending host can send only up to that
+  amount of data before it must wait for an acknowledgement and receive window update from the receiving host. 
+- La velocità di trasmissione è quindi pari a \textbf{Tx(bit/s)=W[bit]/RTT[s] importantissimo}.
+
+\noindent \textbf{Data a disposizione una certa banda B, qual è la dimensione massima che può avere la finestra? W=B*RTT (importantissimo)}
+
+\begin{figure}[!ht]
+    \begin{center}
+        \includegraphics[width=0.7\textwidth]{img/quattro/0024.jpg}         
+    \end{center}
+\end{figure}
+
+\noindent La finestra disponibile si calcola come \textbf{W=min($congestion_{wnd}$,$receiver_{wnd}$)} cioè come minimo tra la window fornita dalla congestione 
+di rete e quella del buffer del destinatario.(Solitamente W=$congestion_{wnd}$). Se la $receiver_{wnd}$ è pari a 0, la trasmissione 
+viene stoppata.
+
+\begin{figure}[!ht]
+    \begin{center}
+        \includegraphics[width=0.7\textwidth]{img/quattro/0027.jpg}         
+    \end{center}
+\end{figure}
+\noindent Quando si libera la finestra, viene inviato un dup-ack per avvisare che la finestra non è più uguale zero.\textbf{importante}
+ Se questo ack viene perso cosa succede? Nel TCP non è detto che si parli di continuo. In quel caso il sender invia un segmento di probe(prova)
+ di lunghezza 1 byte.
+
+\noindent La massima velocità di trasmissione dettata dal $receiver_{wnd}$ da \textbf{rwnd/RTT} (rwnd può essere al massimo di $2^16$ Byte, 
+veramente poco, con 200ms ho una banda di massimo 512Mb/s). Questo problema è stato superato con un nuovo protocollo TCP 
+che si mette d'accordo sulla window scale factor.  
+
+ \begin{figure}[!ht]
+    \begin{center}
+        \includegraphics[width=0.7\textwidth]{img/quattro/0028.jpg}         
+    \end{center}
+\end{figure}
+\noindent Un segmento è definito \textbf{perso} se:
+\begin{enumerate}
+    \item Avviene \textbf{l'RTO(retransmission time out)}. Non ci sono  N timer per ogni pacchetto, ma è presente un unico timer
+    che conta dall'ultimo ack(non dup-ack). L'RTO è dinamico e dipende dall'RTT, il quale deve essere minore dell'RTO. È importante 
+    trovare un buon bilanciamento tra reattività e ridondanza.Solitamente vengono usati algoritmi di exponential back-off: 
+    se il tentativo di ritrasmissione fallisce, riprovo aspettando un tempo  T random che può variare tra 1 e $2^n$. 
+    \item \textbf{(fast retransmit)} Con il passare del tempo si è aggiunta un'altra condizione per velocizzare il riconoscimento delle 
+    perdite(aggiunta da TCP "Tahoe"). L'idea è che con molta probabilità se arrivano 3 dupAcks il pacchetto è perso.
+    (anche se con ip non è assicurato l' ordine, nella realtà la maggior parte delle volte i pacchetti arrivano ordinati).
+\end{enumerate}
+\noindent Se uno di questi due eventi accade si entra in modalità recovery. Essendo gli ack cumulativi, il primo non confermato indica
+ il primo segmento perso di quelli inviati.
+
+ \begin{figure}[!ht]
+    \begin{center}
+        \includegraphics[width=0.9\textwidth]{img/quattro/0029.jpg}         
+    \end{center}
+\end{figure}
+
+\subsubsection{Controllo della congestione}
+\noindent Esistono principalmente 4 algoritmi di controllo della congestione:
+/*parte mancante su cosa dice RFC rispetto ai vincoli*/
+\medskip
+
+Slow start
+Aumento la finestra di uno per ogni ack ricevuto.
+L'idea è che il mittente non sa quanto è congestionata una rete. Parte con uno, se va bene allora proviamo con due. Se due vanno bene ne provo 
+4, se me ne tornano indietro 3 aumento solo di tre e non di 4, quindi ne invierò 7. 
+
+Il delayed ack è un arma a doppio taglio: Se me ne arriva uno ogni due rallento la crescita dell'ack. Quindi un'altra tecnica potrebbe 
+essere aumentare in base a quanto confermato nell'ack.
+C'è ovviamente una soglia.
+
+slide 23
+congestion avoidance
+qua invece aumento ogni volta che mi arrivano un numero di ack pari alla grandezza della finestra. Linux usa questo. (nella pratica c'è un contatore)
+
+QUESTO AVVIENE SOLO NEL CASO IDEALE! LO CHIEDE PER VEDERE SE HAI CAPITO. Solo in condizioni ideali avviene un aumento/raddoppio della 
+window size ogni RTT.
+
+slide 25 grafico 
+slow start all'inizio fino a threshold, poi congestion avoidance IN AI e poi appena c'è un RTO(time-out) riparto da 1.
+La soglia viene posta alla metà della finestra prima del timeout(non può quindi sempre raddoppiare in slowstart), se arriva 
+un 3 dup-acks riparto dalla soglia, che viene sempre dimezzata in base alla window size prima del recovery. 
+
+se time-out: wnd=1 e threshold=$wnd_old$/2
+se 3 dupack: threshold=$wnd_old$/2 e wnd=threshold 
+(questa modalità è proprio Reno e newReno)
+PARTE DA UNO LA WINDOWS size(lo chiede). Chiede spesso questa figura(disegnarla)
+
+Perché reagisco in modo diverso? Perché se mi arriva un dupack significa che comunque stanno arrivando dei segmenti dall'altra parte.
+Se non mi arrivano nemmeno i dupack significa che c'è stata una mega congestione.
+Non è detto che la congestione si risolva però: i pacchetti come UDP non rilevano la congestione(al massimo rtcp un pochetto).
+
+la fairness del TCP è che ipoteticamente si arriva a una divisione della rete senza il grande controllore. La divisione avviene tra pari. 
+È la realizzazione del controllo decentralizzato della congestione. La figata è che non è detto che una connessione TCP utilizzi sempre banda.
+Se una connessione è attiva non è detto che utilizzi banda necessariamente! Un algoritmo di controllo centralizzato distribuirebbe la banda in modo equo,
+ma non è detto che questo sia il metodo migliore, la banda non è sempre utilizzata da una connessione TCP.
+
+unfairness del TCP. Se RTT è molto diverso tra le connessioni, chi va più lenta aumenterà meno nel tempo rispetto a chi va più veloce. 
+Es. RTT1=25ms RTT2=600ms, RTT1 ogni 25ms potrebbe avere un aumento di banda, mentre RTT2 ogni 600ms. Per questo le connessioni via satellite 
+non vanno molto bene con TCP. 
+
+
+N.B. la dimensione è in max-length-segment
+
+Inoltre il TCP non è in grado di riconoscere l'origine della congestione (bit errati ecc...)
+
+slide 26
+SACK: dupack che però dice anche quale è arrivato. Permette di capire quali pacchetti sono andati persi in un unico RTT invece che 3 RTT 
+con il dup-ack. Conferma fino a un massimo di 4 blocchi che sono arrivati.
+
+LINUX usa una variante di nome CUBIC. Quando mi invento una nuova variante devo sempre testare la fairness con gli altri protocolli.
+
+Un'altra variante è Vegas: invece di controllare i pacchetti persi, controllo la variazione di RTT, se aumenta rallento. Ovvio che Vegas 
+confronto a Reno è molto più lenta.
+
+Hybla è per le connessioni via satellite
+
+slide 28 parametri interessanti da aggiungere alle cose vecchie.
+slide 29 opzioni.
+maximum segment size: relativo al payload(di solito 1460 è il massimo che potrei avere senza causare frammentazione su ethernet)
+
+RTT viene stimato con il timestamp. Invio nelle opzioni il timestamp del pacchetto, l'ack mi ritorna con il timestamp che mi conferma. 
+È utile per capire se mi sta riconfermando il ritrasmesso oppure no.
+\end{document}
