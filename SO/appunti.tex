@@ -3861,6 +3861,40 @@ sono definite due operazioni:
 \textbf{SIGNAL\_ALL} (variante della signal\_and\_continue). Ovviamente tutti i processi risvegliati verranno inseriti nella entry queue
 del monitor prima di poter proseguire con l'esecuzione.
 
+\subsubsection{Implementazione dei monitor in Java} 
+In java il meccanismo del monitor si può implementare attraverso l'utilizzo di due interfacce:
+
+\begin{lstlisting}[style=CStyle]
+Public interface Condition {
+    void await() throws InterruptedException; //identica alla wait()
+    void signal(); //identica alla signal
+    void signalAll(); //identica alla signalAll
+}
+
+// Dalla versione 5.0 java permette di poter utilizzare esplicitamente
+ il concetto di lock definito in java.util.concurrent.locks
+
+Public interface Lock{
+    //metodi per realizzare i metodi entry
+    void lock();
+    void unlock();
+    Condition newCondition(); //rilascia una variabile condition associata al lock
+}
+
+//Utilizzo del lock
+Lock lock = new ReentrantLock();
+Condition condition = new lock.newCondition();
+
+\end{lstlisting}
+\noindent Nota: la semantica di signal() è signal\_and\_continue.
+
+\noindent Il lock racchiude quindi il concetto di monitor e le variabili condition rappresentano fondamentalmente delle code.
+ Ogni variabile condition è associata ad un lock che viene liberato quando il thread viene sospeso tramite await() oppure 
+può essere rioccupato a seguito di una signal() o signalAll().
+
+
+
+
 \pagebreak
 \section{Bash}
 La shell è un interprete comandi che permette all'utente di eseguire comandi da standart input oppure da file comandi.
@@ -3887,10 +3921,7 @@ Esistono varie versioni di shell, la più famosa è la bourne shell presente nel
 
 
 \begin{lstlisting}[style=BashStyle]
-    #!/bin/bash
-
-    
-    
+    #!/bin/bash    
 \end{lstlisting}
 
 \end{document}
