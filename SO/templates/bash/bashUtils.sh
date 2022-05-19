@@ -43,4 +43,20 @@ then
    exit $E_GENERIC
 fi
 
-#missing other file invocation.
+# call recursive file
+
+fileToInvoke="recursive.sh"
+# absolute path
+if [[ "$0" = /* ]] ; then
+	dir_name=$(dirname "$0")
+	recursive_cmd="$dir_name/$fileToInvoke"
+# relative path
+elif [[ "$0" = */* ]] ; then
+	dir_name=$(dirname "$0")
+	recursive_cmd="$(pwd)/$dir_name/$fileToInvoke" # I have to add $dirname, if the pwd is different beacause the file was invoked
+# if the directory is in PATH
+else 
+	recursive_cmd="$fileToInvoke" 
+fi
+
+"$recursive_cmd"
