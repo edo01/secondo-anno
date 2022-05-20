@@ -373,14 +373,14 @@ Quali sono gli attributi di un processo? \begin{itemize}
 \subsection{Stato di un processo}
 Un processo, durante il suo ciclo di vita, si può trovare
 in vari stati:\begin{enumerate}
-    \item \textit{init}: stato transitorio. Il processo viene
+    \item \textbf{\textit{Init}}: stato transitorio. Il processo viene
     caricato in memoria e il SO inizializza tutti i dati necessari.
     Un processo viene portato nella fase di init dallo scheduler dei processi.
-    \item \textit{ready}: il processo pronto per acquisire la CPU.
-    \item \textit{running}: il processo sta utilizzando la CPU
-    \item \textit{waiting}: il processo è sospeso in attesa di un evento o di
+    \item \textbf{\textit{Ready}}: il processo pronto per acquisire la CPU.
+    \item \textbf{\textit{Running}}: il processo sta utilizzando la CPU
+    \item \textbf{\textit{Waiting}}: il processo è sospeso in attesa di un evento o di
     una risorsa.
-    \item \textit{Terminated}: stato transitorio. È un tempo dovuto alla 
+    \item \textbf{\textit{Terminated}}: stato transitorio. È un tempo dovuto alla 
     deallocazione del processo dalla memoria.
 \end{enumerate}
 \begin{figure}[h!]
