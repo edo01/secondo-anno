@@ -486,10 +486,10 @@ Ad es.:\begin{itemize}
 \noindent\fbox{%
 \parbox{\textwidth}{%
     \begin{center}
-        \textbf{Overhead}: Il passaggio da un processo al successivo può 
-        richiedere onerosi trasferimenti da/verso la memoria secondaria,
-            per allocare/deallocare gli spazi di indirizzi dei processi. 
-            Troppi cambi di contesto aumentano l'overhead della CPU.
+        \textbf{Cambio di contesto}: durante un cambio di contesto la CPU è occupata solamente per l'esecuzione 
+        di istruzioni volte alla gestione dei processi. Questa gestione può richiedere onerosi trasferimenti da/verso
+         la memoria, per il salvataggio/ripristino dello stato del processo. 
+        Troppi cambi di contesto aumentano l'overhead della CPU.
     \end{center}
     }%
 }
@@ -506,8 +506,12 @@ parametri. Questo ci porta all'utilizzo di processi leggeri, i THREAD,
 che hanno la proprietà di condividere codice e dati con altri processi.
 L'effetto è una diminuzione del PCB e una conseguente diminuzione 
 dell'overhead.
+\medskip
 
-\subsection{Operazione sui processi}
+\noindent Come avviene il cambio di contesto? Il dispatcher invia un interrupt alla CPU, avvisando che è stato programmato un cambio 
+di contesto. La CPU allora salverà lo stato del processo nel PCB
+
+\subsection{Relazione tra processi}
 Ogni sistema operativo multiprogrammato prevede dei meccanismi per 
 la gestione dei processi:
 \begin{enumerate}
@@ -557,6 +561,39 @@ che termina?
 Nel primo caso esistono due possibilità: o tutti i figli terminano, oppure
 i figli continuano l'esecuzione ma devono cercarsi un nuovo processo padre.
 Nel secondo caso il padre può rilevare il suo stato di terminazione.
+
+\subsubsection{Processi indipendenti e interagenti}
+\begin{itemize}
+    \item \underline{Processi interagenti}: due processi 
+    sono interagenti se l'esecuzione di uno è influenzata
+    dall'esecuzione di un altro e/o viceversa. Esistono diversi
+    tipi di interazione: \begin{enumerate}
+        \item \textbf{cooperazione}:Interazione prevedibile e
+        desiderata, i processi collaborano per il 
+        raggiungimento di un fine comune.
+        \item \textbf{Competizione}: interazione prevedibile
+        ma “non desiderata”.
+        \item \textbf{Interferenza}: interazione non prevista
+         e non desiderata. 
+    \end{enumerate}
+    L'interazione può avvenire mediante:
+    \begin{enumerate}
+        \item \textbf{Memoria condivisa}(Ambiente globale):
+        Il sistema operativo consente ai processi di condividere variabili: 
+        l'interazione avviene tramite l'accesso a variabili
+        condivise.
+        \item \textbf{Scambio di messaggi}(Ambiente locale): 
+        I processi non condividono variabili e interagiscono mediante
+        trasmissione/ricezione di messaggi.
+    \end{enumerate}
+    Il vantaggio principale di utilizzare processi che possono
+    interagire fra di loro (\textit{condivisione di informazioni})
+    è la velocità di esecuzione, in quanto vi è una
+    suddivisione dei compiti tra i vari processi (\textit{modularità}).
+    
+    \item \underline{Processi indipendenti}: due processi si dicono 
+    indipendenti se l'esecuzione di uno non è influenzata dall'altro e viceversa.
+\end{itemize}
 
 \subsection{Thread}
 Un thread è un unità di esecuzione che può condividere codice e dati con altri
@@ -609,41 +646,7 @@ dati e risorse(files).
 è la sicurezza e la coerenza dei dati, in quanto un thread ha accesso ai
 dati di un altro thread.
 
-\subsection{Processi indipendenti e interagenti}
-
-\begin{itemize}
-    \item \underline{Processi interagenti}: due processi 
-    sono interagenti se l'esecuzione di uno è influenzata
-    dall'esecuzione di un altro e/o viceversa. Esistono diversi
-    tipi di interazione: \begin{enumerate}
-        \item \textbf{cooperazione}:Interazione prevedibile e
-        desiderata, i processi collaborano per il 
-        raggiungimento di un fine comune.
-        \item \textbf{Competizione}: Interazione prevedibile
-        ma “non desiderata”.
-        \item \textbf{Interferenza}:Interazione non prevista
-         e non desiderata. 
-    \end{enumerate}
-    L'interazione può avvenire mediante:
-    \begin{enumerate}
-        \item \textbf{Memoria condivisa}(Ambiente globale):
-        Il sistema operativo consente ai processi di condividere variabili: 
-        l'interazione avviene tramite l'accesso a variabili
-        condivise.
-        \item \textbf{Scambio di messaggi}(Ambiente locale): 
-        I processi non condividono variabili e interagiscono mediante
-        trasmissione/ricezione di messaggi.
-    \end{enumerate}
-    Il vantaggio principale di utilizzare processi che possono
-    interagire fra di loro (\textit{condivisione di informazioni})
-    è la velocità di esecuzione, in quanto vi è una
-    suddivisione dei compiti tra i vari processi (\textit{Modularità}).
-    
-    \item \underline{Processi indipendenti}: due processi si dicono 
-    indipendenti se l'esecuzione di uno non è influenzata dall'altro e viceversa.
-\end{itemize}
-
-\subsection{Implementazione dei thread}
+\subsubsection{Implementazione dei thread}
 La creazione de thread può essere realizzata nei seguenti modi:
 \begin{itemize}
     \item [$-$] \textbf{Livello kernel}: Il SO 
@@ -660,8 +663,7 @@ La creazione de thread può essere realizzata nei seguenti modi:
 \end{itemize}  
 
 \pagebreak
-\section{UNIX}
-\subsection{Caratteristiche di un processo UNIX}
+\section{Caratteristiche di un processo UNIX}
 
 \noindent Ogni processo ha un proprio spazio di indirizzamento
 completamente locale e non condiviso. Questo modello è detto 
@@ -672,7 +674,7 @@ programma, allora alloco il codice in memoria solo una volta(\textbf{codice rien
 
 
 
-\subsubsection{Stati di un processo UNIX}
+\subsection{Stati di un processo UNIX}
 Oltre agli stati generali (init, ready, running, sleeping, terminated)
 si hanno in aggiunta due nuovi:
 \begin{itemize}
@@ -693,8 +695,8 @@ si hanno in aggiunta due nuovi:
     \end{center}
 \end{figure}
 
-\subsubsection{Rappresentazione processi UNIX}
-Il codice dei processi è rientrante, quindi più processi possono condividere
+\subsection{Rappresentazione processi UNIX}
+Il codice dei processi è \textbf{rientrante}, quindi più processi possono condividere
 lo stesso codice. Per permettere questo il codice ed i dati devono
 essere separati (\textbf{modello a codice puro}). Il sistema operativo gestisce
 una struttura dati globale in cui sono contenuti i puntatori ai codici utilizzati,
@@ -703,8 +705,8 @@ eventualmente condivisi, dai processi.
 \noindent La struttura che contiene i puntatori ai codici dei programmi viene chiamata: \textbf{text table}.
 L'elemento della text table si chiama \textbf{text structure} (una text structure 
 per ogni codice attualmente in uso) e contiene: un puntatore al codice 
-ed il numero dei processi che lo condividono: un semplice contatore, utile 
-per capire se è possibile eliminare la text structure nel caso vada a zero.
+ed il numero dei processi che lo condividono (un semplice contatore, utile 
+per capire se è possibile eliminare la text structure nel caso vada a zero).
 
 \begin{longtable}[c]{| c | c |}
    
@@ -730,7 +732,7 @@ per capire se è possibile eliminare la text structure nel caso vada a zero.
 strutture dati (invece di una):
 \begin{enumerate}
     \item \textbf{Process structure}: contiene le informazioni 
-    necessarie al sistema per la gestione del processo (PID,
+    necessarie al sistema per la gestione del processo (PID(indice della tabella),
     stato, puntatori alle aree dati e stack del processo, \textit{riferimento 
     all'elemento della text table associato al codice del processo}, informazioni
     di scheduling, riferimento al PID padre, gestione dei segnali, 
@@ -748,24 +750,24 @@ strutture dati (invece di una):
         \endfirsthead
         \hline
             1020 & waiting & 2034 & 4 & 1 & .. & 1234 \\
-            1 & waiting & 2034 & 4 & 1 & .. & 2345 \\
-            2323 & zombie & 2034 & 3 & 1020 & .. & 2342 \\
-            1450 & swapped & 2034 & 2 & 1 & .. & 0234 \\
+            1 & waiting & 2 & 4 & 1 & .. & 2345 \\
+            2323 & zombie & 3 & 3 & 1020 & .. & 2342 \\
+            1450 & swapped & 3 & 2 & 1 & .. & 0234 \\
             ... & ... & ... & ... & ... & ... & ... \\
-            0100 & running & 2034 & 4 & 1 & .. & 2134 \\
+            0100 & running & 903 & 4 & 1 & .. & 2134 \\
         \hline
     \end{longtable}
 
 
-    \item \textbf{User structure}: informazioni necessarie solo se il processo 
-    è residente in memoria centrale (inutile se è stata swappata) (registri CPU,
+    \item \textbf{User structure}: informazioni necessarie solo in un contesto 
+    di \underline{esecuzione} del processo (registri CPU,
     informazioni sulle risorse allocate (cioè file aperti), informazioni sulla
     gestione dei segnali, ambiente del processo(directory corrente, utente,
     gruppo, argc/argv, path)...).
 
 \end{enumerate}
 
-\subsubsection{Immagine di un processo}
+\subsection{Immagine di un processo}
 
 \noindent \textbf{Immagine di un processo}: E' l'insieme di aree di memoria e
 strutture dati, associate al processo. \textit{ATTENZIONE}: non tutta 
@@ -786,6 +788,10 @@ parametri tramite system call.
 \noindent Ogni processo può essere soggetto a swapping:
 ma non tutta l'immagine di un processo può essere trasferita in memoria: 
 \textit{una parte swappable ed una parte residente non swappable.}
+\medskip
+
+\noindent Da notare come la parte del codice sia staccata dallo stack ecc... per la realizzazione del 
+modello a codice puro.
 
 \pagebreak
 \section{System Call}
@@ -872,7 +878,7 @@ la terminazione del processo:
     termini i figli in stato zombie termineranno con lui.
 \end{itemize}
 
-\textbf{N.B.} Quando termina un processo adottato dal processo init, init 
+\noindent \textbf{N.B.} Quando termina un processo adottato dal processo init, init 
 rileva automaticamente il suo stato di terminazione. Perciò i processi figli di
 init non permangono nello stato di zombie.
 
@@ -892,8 +898,8 @@ l'indirizzo della variabile in cui viene memorizzato lo stato di terminazione
 del figlio. Quindi la wait serve al padre per verificare il risultato di un 
 processo in stato zombie.
 
-Il risultato prodotto dalla wait() è il PID del processo terminato oppure 
-un codice di errore (minore 0).
+\noindent Il risultato prodotto dalla wait() è il PID del processo terminato oppure 
+un codice di errore (minore di 0).
 La logica è la seguente:
 \begin{enumerate}
     \item Se tutti i figli non sono ancora terminati,
@@ -908,17 +914,16 @@ La logica è la seguente:
 \noindent In caso di terminazione di un figlio, la variabile status raccoglie lo 
 stato di terminazione. Si distinguono due casi:
 \begin{enumerate}
-    \item Byte meno significativo di status è zero: si parla di terminazione volontaria
-    {primi 8 bit codice di stato e ultimi 8 bit pari a zero}. 
+    \item Se il byte meno significativo di status è uguale a zero si parla di terminazione volontaria:
+    i primi 8 bit di codice di stato e ultimi 8 bit pari a zero. 
     \item In caso contrario il byte meno significativo descrive il segnale
-    che ha terminato il figlio (terminazione involontaria) 
-    {primi 8 bit codice di stato saranno inutili e ultimi 8 bit 
-    indicano il segnale che ha terminato il figlio}.
+    che ha terminato il figlio (terminazione involontaria): 
+    i primi 8 bit che rappresentano il codice di stato saranno inutili e gli ultimi 8 bit 
+    indicano il codice del segnale che ha terminato il figlio.
 \end{enumerate}
 
 \noindent Esempio di wait, N.B. lo standard POSIX.1 prevede delle macro definite
-nell'header file <sys/wait.h> per l'analisi dello
-stato di terminazione:
+nell'header file $<$sys/wait.h$>$ per l'analisi dello stato di terminazione:
 
 \begin{lstlisting}[style=CStyle]
 #include <sys/wait.h>
@@ -1117,17 +1122,17 @@ realizza il cambio di contesto.
 }
 \medskip
 
-\noindentÈ importante differenziare le parti di esecuzione
+\noindent È importante differenziare le parti di esecuzione
  di un processo:\begin{itemize}
     \item[$-$] \textbf{I/O bound}: prevalenza di attività di I/0.
     \item[$-$] \textbf{CPU bound}: prevalenza di utilizzo della CPU.
   \end{itemize}
-\noindent Gli algoritmi di scheduling si possono 
-classificare in due categorie:
+\noindent Gli algoritmi di scheduling si possono classificare in due categorie:
 \begin{itemize}
     \item[$-$] \textbf{Non pre-emptive}: la CPU rimane allocata al
     processo running finché esso non si sospende volontariamente
     o non termina.
+
     \item[$-$] \textbf{Pre-emptive}: un processo running può essere
     prelazionato, cioè lo scheduler può sottrargli la CPU per 
     assegnarla ad un nuovo processo.
@@ -1137,7 +1142,7 @@ classificare in due categorie:
  \end{itemize}
 
 
-\subsection{Criteri di scheduling}:
+\subsection{Criteri di scheduling}
 \noindent Per analizzare e confrontare i diversi algoritmi 
 di scheduling, vengono considerati alcuni indicatori di
 performance:
@@ -1146,7 +1151,7 @@ performance:
     utilizzo CPU nell'unità di tempo.
     \item \textbf{Throughput} (del sistema): numero di
     processi completati nell'unità di tempo.
-    \item \textbf{Tempo di Attesa} (di un processo): tempo
+    \item \textbf{Tempo di attesa} (di un processo): tempo
     totale trascorso nella ready queue.
     \item \textbf{Turnaround} (di un processo): tempo tra
     la sottomissione del job e il suo completamento.
@@ -1201,9 +1206,9 @@ Per esempio: \begin{itemize}
     stimata la lunghezza del CPU burst e viene schedulato il
     processo con il CPU burst più corto. Questo algoritmo 
     ottimizza il tempo di attesa e può essere: non pre-emptive 
-    e pre-emptive. In questo ultimo caso se nella coda
-    arriva un processo con CPU burst minore del CPU burst 
-    rimasto al processo in stato di running).
+    o pre-emptive(\textbf{SRTF}). In questo ultimo caso se nella coda
+    arriva un processo con CPU burst minore del CPU burst del processo in esecuzione, questo viene prelazionato
+    a favore.
 
     \begin{figure}[h!]
         \begin{center}
@@ -1390,7 +1395,7 @@ e \textbf{receive} (ricezione di messaggi). Il \textbf{naming} è il
 modo con cui viene identificato il destinatario della comunicazione.
 La comunicazione avviene attraverso un \textbf{canale di comunicazione} 
 ,astrazione creata dal sistema operativo per permettere a due
-processi di comunicare. Ogni canale di comunicazione ha determinata
+processi di comunicare. Ogni canale di comunicazione ha una determinata
 \textbf{capacità}, che indica il massimo numero di messaggi che è
 in grado di contenere contemporaneamente.
 
