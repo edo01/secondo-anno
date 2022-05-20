@@ -16,7 +16,7 @@ E_GENERIC=2
 #check number of arguments
 if [[  $# -lt $MIN_ARGS ]];then
 	echo "[ERROR] args: given $#, required $MIN_ARGS" 1>&2
-	exit $E_RGS
+	exit $E_ARGS
 fi
 
 dirin=$1
