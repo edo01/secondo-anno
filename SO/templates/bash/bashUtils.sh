@@ -37,7 +37,7 @@ if ! [[ "$dirin" = /* ]];then
 fi
 
 #check if dirin is a directory and the user has execute permission
-if ! [[ -d "$dirin" && -x "$dirin" ]]
+if ! [[ -d "$dirin" && -x "$dirin" && -r "$dirin" ]]
 then 
    echo [ERROR] cannot access to: $dirin, do you have execute permission?
    exit $E_GENERIC
