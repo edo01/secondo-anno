@@ -4,7 +4,16 @@ import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
-public class ResourceHandler {
+import jdk.internal.loader.Resource;
+
+/*
+ * TODO:
+ * - una classe log: avere un buon log è fondamentale per capire se il proprio programma funziona (differenziare per chi fa il log)
+ * - classi fornitore e utilizzatore
+ * 
+ */
+
+public class Monitor {
 	
 	//lock for entry methods
 	private Lock lock;
@@ -24,6 +33,16 @@ public class ResourceHandler {
 	private int consumer1Number;
 	private int consumer2Number;
 	
+	//resource
+	private int resource;
+	
+	//status
+	private int status; 
+	private static final int INIT=1;
+	private static final int ACQUIRE=2;
+	private static final int RELEASE=3;
+	
+	
 	public ResourceHandler() {
 		
 		//check parameters first
@@ -40,16 +59,28 @@ public class ResourceHandler {
 		//set the number of consumer which are using the resource to zero
 		this.consumer1Number=0;
 		this.consumer2Number=0;
+		
+		//init resource
+		this.resource=20;
+		
+		//init status
+		this.status=this.INIT;
+		
+		log("init");
+	
 	}
 	
+	//Se è necessario assegnare delle variabili
 	public void enterConsumer1() throws InterruptedException{
 		this.lock.lock();
 		try {
-			while(this.respectResource1PolicyAndPriority()) {
+			while(!this.respectResource1PolicyAndPriority()) {
 				this.consumerQueue1Length++; //add the thread to the condition row
+				this.log("wait");
 				this.consumerQueue1.await();
 				this.consumerQueue1Length--; //try to remove the thread from the row if policy and priority are respected
 			}
+			log("acquire");
 			this.consumer1Number++; //add a consumer of type 1 to the resource
 
 		}finally {
@@ -60,12 +91,14 @@ public class ResourceHandler {
 	public void enterConsumer2() throws InterruptedException{
 		this.lock.lock();
 		try {
-			while(this.respectResource2PolicyAndPriority()) {
+			while(!this.respectResource2PolicyAndPriority()) {
 				this.consumerQueue2Length++; //add the thread to the condition row
+				this.log("wait");
 				this.consumerQueue2.await();
 				this.consumerQueue2Length--; //try to remove the thread from the row if policy and priority are respected
 			}
 			this.consumer2Number++; //add a consumer of type 1 to the resource
+			log("acquire");
 
 		}finally {
 			lock.unlock();
@@ -97,10 +130,15 @@ public class ResourceHandler {
 		this.lock.lock();
 		
 		if(this.consumerQueue1Length>0) //release the resource to other consumer1 
-			this.consumerQueue1.signal();
+			this.consumerQueue1.signal(); // quando liberi una risorsa chiedeti sempre: quante risorse sto liberando?
 		else if(this.consumerQueue2Length>0) //release the resource to consumer2 "CAMBIO DI MODO"
 			this.consumerQueue2.signalAll();
 		
+		this.consumer1Number--;
+		this.resource--;
+
+		log("release");
+
 		this.lock.unlock();
 	}
 	
@@ -108,12 +146,38 @@ public class ResourceHandler {
 		this.lock.lock();
 		
 		if(this.consumerQueue2Length>0) //release the resource to other consumer2
-			this.consumerQueue2.signal();
+			this.consumerQueue2.signal(); // quando liberi una risorsa chiedeti sempre: quante risorse sto liberando?
 		else if(this.consumerQueue1Length>0) //release the resource to consumer1 "CAMBIO DI MODO"
 			this.consumerQueue1.signalAll();
 		
+		this.consumer1Number++;
+		this.resource--;
+		
+		log("release");
+
 		this.lock.unlock();
 	}
 	
+	public void produce(int n) {
+		this.lock();
+	
+		this.resource+=n;
+		
+		if(this.consumerQueue1Length>0)
+			this.consumerQueue1.signalAll(); //Se più thread possono accedere dopo questo incremento, signalAll
+		else if(this.consumerQueue2Length>0)
+			this.consumerQueue2.signalAll();
+		
+		log("produce");
+
+		this.unlock();
+	}
+
+	
+	
+	private void log(String status) {
+		String log ="[LOG:"+ status + "]"; // add monitor here
+		System.out.println(log);
+	}
 
 }
